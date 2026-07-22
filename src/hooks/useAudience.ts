@@ -22,9 +22,11 @@ import type {
 	GithubProfileNode,
 	LocalizedGithubProfile,
 	CostEstimate,
-	ReconcileStage
+	ReconcileStage,
+	RateLimit
 } from "@/api/graphql.types";
 import { TokenPool } from "@/api/token-pool";
+import { UNKNOWN_REGION } from "@/lib/region";
 
 const INITIAL_STEPS: Step[] = [
 	{
@@ -75,7 +77,7 @@ const initialState: AudienceState = {
 };
 
 type Action =
-	| { type: "FETCH_START" }
+	| { type: "FETCH_START"; preserveUser?: GithubUserProfile | null }
 	| { type: "USER_RESOLVED"; user: GithubUserProfile }
 	| { type: "FOLLOWING_COUNT_CORRECTED"; count: number }
 	| { type: "STEP_UPDATE"; id: StepId; patch: Partial<Omit<Step, "id">> }
@@ -88,7 +90,11 @@ type Action =
 function reducer(state: AudienceState, action: Action): AudienceState {
 	switch (action.type) {
 		case "FETCH_START":
-			return { ...initialState, status: "loading" };
+			return {
+				...initialState,
+				status: "loading",
+				user: action.preserveUser ?? null
+			};
 		case "USER_RESOLVED":
 			return {
 				...state,
@@ -153,6 +159,10 @@ export type UseAudienceReturn = AudienceState & {
 export function useAudience(credentials: Credentials): UseAudienceReturn {
 	const [state, dispatch] = useReducer(reducer, initialState);
 	const controllerRef = useRef<AbortController | null>(null);
+	const profileCacheRef = useRef<{
+		user: GithubUserProfile;
+		rateLimit: RateLimit;
+	} | null>(null);
 
 	const updateStep = useCallback(
 		(id: StepId, patch: Partial<Omit<Step, "id">>) =>
@@ -171,7 +181,9 @@ export function useAudience(credentials: Credentials): UseAudienceReturn {
 			signal: AbortSignal,
 			skipWarning = false
 		) {
-			dispatch({ type: "FETCH_START" });
+			const cached = skipWarning ? profileCacheRef.current : null;
+			dispatch({ type: "FETCH_START", preserveUser: cached?.user ?? null });
+
 			const dispatchFetchError = (error: unknown) => {
 				if (error instanceof Error && error.name === "AbortError") return;
 				if (error instanceof RateLimitError) {
@@ -199,12 +211,24 @@ export function useAudience(credentials: Credentials): UseAudienceReturn {
 						.map((t: string) => t.trim())
 						.filter(Boolean)
 				);
-				const { profile: user, rateLimit } = await fetchUserProfile(
-					credentials.user,
-					tokenPool,
-					signal
-				);
+
+				let user: GithubUserProfile;
+				let rateLimit: RateLimit;
+				if (cached) {
+					user = cached.user;
+					rateLimit = cached.rateLimit;
+				} else {
+					const resolved = await fetchUserProfile(
+						credentials.user,
+						tokenPool,
+						signal
+					);
+					user = resolved.profile;
+					rateLimit = resolved.rateLimit;
+					profileCacheRef.current = { user, rateLimit };
+				}
 				dispatch({ type: "USER_RESOLVED", user });
+
 				const baseEstimate = estimateAudienceCost(
 					user.followersCount,
 					user.followingCount,
@@ -230,12 +254,29 @@ export function useAudience(credentials: Credentials): UseAudienceReturn {
 				});
 
 				let followersDone = 0;
+				const followersTotal = user.followersCount;
+
 				let followingDone = 0;
+				let followingTotal = user.followingCount;
 				let followingStage: ReconcileStage = "graphql";
-				const reportFetchProgress = () =>
+				let geocodeTotal = followersTotal + followingTotal;
+				let geocodeDone = 0;
+				let lastPct = 0;
+				const emitProgress = () => {
+					const fetchTotal = followersTotal + followingTotal;
+					const overallTotal = Math.max(fetchTotal + geocodeTotal, 1);
+					const overallDone = followersDone + followingDone + geocodeDone;
+					const raw = Math.round((overallDone / overallTotal) * 100);
+					lastPct = Math.max(lastPct, Math.min(raw, 99));
+					dispatch({ type: "PROGRESS", pct: lastPct });
+				};
+
+				const reportFetchProgress = () => {
 					updateStep("fetch", {
 						detail: `${followersDone} followers · ${followingDone} following${FOLLOWING_STAGE_LABEL[followingStage]}…`
 					});
+					emitProgress();
+				};
 
 				const followersPromise = fetchAllAudience(
 					credentials.user,
@@ -247,14 +288,16 @@ export function useAudience(credentials: Credentials): UseAudienceReturn {
 					},
 					signal
 				);
+
 				const followingPromise = fetchAllAudienceReconciled(
 					credentials.user,
 					"following",
 					tokenPool,
 					(stage, done, total) => {
 						followingStage = stage;
-						followingDone = done;
+						followingDone = Math.max(followingDone, done);
 						if (stage === "backfill" && total !== null) {
+							followingTotal = total;
 							dispatch({ type: "FOLLOWING_COUNT_CORRECTED", count: total });
 						}
 						reportFetchProgress();
@@ -280,6 +323,7 @@ export function useAudience(credentials: Credentials): UseAudienceReturn {
 				const followingResult = followingSettled.value;
 				const following = followingResult.nodes;
 
+				emitProgress();
 				updateStep("fetch", {
 					status: "done",
 					detail: `${followers.length} followers · ${following.length} following${
@@ -288,12 +332,14 @@ export function useAudience(credentials: Credentials): UseAudienceReturn {
 						:	""
 					}`
 				});
-				dispatch({ type: "PROGRESS", pct: 40 });
 
 				const uniqueProfiles = new Map<string, GithubProfileNode>();
 				for (const profile of [...followers, ...following]) {
 					uniqueProfiles.set(profile.login, profile);
 				}
+
+				geocodeTotal = uniqueProfiles.size;
+				emitProgress();
 
 				if (signal.aborted) return;
 
@@ -302,10 +348,8 @@ export function useAudience(credentials: Credentials): UseAudienceReturn {
 					[...uniqueProfiles.values()],
 					({ done, total }) => {
 						updateStep("geocode", { detail: `${done} / ${total}` });
-						dispatch({
-							type: "PROGRESS",
-							pct: 40 + Math.round((done / total) * 60)
-						});
+						geocodeDone = done;
+						emitProgress();
 					},
 					signal
 				);
@@ -319,10 +363,10 @@ export function useAudience(credentials: Credentials): UseAudienceReturn {
 				const attachCountry = (
 					profiles: GithubProfileNode[]
 				): LocalizedGithubProfile[] =>
-					profiles.flatMap((profile) => {
-						const country = profileCountryMap.get(profile.login);
-						return country ? [{ ...profile, country }] : [];
-					});
+					profiles.map((profile) => ({
+						...profile,
+						country: profileCountryMap.get(profile.login) ?? UNKNOWN_REGION
+					}));
 				const computeGhosts = <T extends { login: string }>(
 					followerList: T[],
 					followingList: T[]
