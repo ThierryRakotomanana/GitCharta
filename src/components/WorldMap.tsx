@@ -27,13 +27,15 @@ export interface WorldMapProps {
 	height: number;
 	setCountry: (country: string) => void;
 	audience: LocalizedGithubProfile[];
+	selectedCountry?: string | null;
 }
 
 export const WorldMap = ({
 	width,
 	height,
 	setCountry,
-	audience
+	audience,
+	selectedCountry = null
 }: WorldMapProps) => {
 	const url =
 		"https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson";
@@ -121,9 +123,9 @@ export const WorldMap = ({
 				/>
 			</g>
 			<defs>
-				<filter id='map-glow' x='-10%' y='-10%' width='110%' height='110%'>
-					<feGaussianBlur stdDeviation='15' result='blur' />
-					<feFlood floodColor='var(--primary)' floodOpacity='0.15' result='color' />
+				<filter id='map-glow' x='-30%' y='-30%' width='150%' height='150%'>
+					<feGaussianBlur stdDeviation='6' result='blur' />
+					<feFlood floodColor='var(--primary)' floodOpacity='0.55' result='color' />
 					<feComposite in='color' in2='blur' operator='in' result='coloredGlow' />
 					<feComposite
 						in='coloredGlow'
@@ -137,23 +139,29 @@ export const WorldMap = ({
 					</feMerge>
 				</filter>
 			</defs>
-			<g filter=''>
+			<g>
 				{mapPaths.map((country) => {
 					const count = profilesByCountry.get(country.id)?.length ?? 0;
 					const hasData = count > 0;
+					const isSelected =
+						selectedCountry !== null && country.id === selectedCountry;
 					return (
 						<path
 							key={`${country.id}-${country.name}`}
 							d={country.svgPath}
+							filter={isSelected ? "url(#map-glow)" : undefined}
 							fill={
 								hasData ?
 									`hsl(var(--signal) / ${heatScale(count).toFixed(2)})`
 								:	MAP_BASE_STYLING.defaultFill
 							}
-							className='transition-colors duration-300 ease-in-out cursor-pointer stroke-[0.05px] stroke-accent-foreground hover:stroke-[1.5px] hover:stroke-accent-foreground hover:brightness-110 focus:outline-none focus-visible:stroke-[2.5px] focus-visible:stroke-ring'
+							className={`transition-colors duration-300 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none focus-visible:stroke-[2.5px] focus-visible:stroke-ring ${
+								isSelected ? "stroke-[2px] stroke-primary" : "stroke-[0.05px]"
+							}`}
 							tabIndex={0}
 							role='button'
-							aria-label={`${country.name}${profilesByCountry.get(country.id) ? `, ${profilesByCountry.get(country.id)!.length} follower${profilesByCountry.get(country.id)!.length > 1 ? "s" : ""}` : ", no followers"}`}
+							aria-pressed={isSelected}
+							aria-label={`${country.name}, ${hasData ? `${count} follower${count > 1 ? "s" : ""}` : "no followers"}`}
 							onClick={() => {
 								setCountry(country.id);
 							}}
