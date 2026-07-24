@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useReducer, useState } from "react";
 
 import CredentialForm from "./components/CredentialForm";
 import { useAudience } from "./hooks/useAudience";
@@ -24,6 +24,7 @@ import { AlertTriangle, List, Loader2, UserRound } from "lucide-react";
 import { GithubIcon } from "@/components/icons/lucide-github";
 import { Separator } from "@/components/ui/separator";
 import type { Credentials } from "@/api/graphql.types";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type AudienceType = "followers" | "following" | "ghosts";
 
@@ -72,6 +73,9 @@ function App() {
 		initialState
 	);
 
+	const isMobile = useMediaQuery("(max-width: 767px)");
+	const [sheetOpen, setSheetOpen] = useState(false);
+
 	const { ref: mapContainerRef, size } = useElementSize<HTMLDivElement>();
 	const {
 		status,
@@ -90,6 +94,7 @@ function App() {
 	const handleResetUser = () => dispatch({ type: "RESET_USER" });
 	const setCountry = (c: string | null) => {
 		dispatch({ type: "SET_COUNTRY", payload: c });
+		if (c && isMobile) setSheetOpen(true);
 	};
 	const setCredentials = (creds: Credentials) =>
 		dispatch({ type: "SET_CREDENTIALS", payload: creds });
@@ -125,10 +130,12 @@ function App() {
 						</div>
 
 						<div className='flex items-center gap-3 sm:gap-4 shrink-0'>
-							<div className='flex items-center gap-3 sm:gap-6'>
-								<Stat label='Followers' value={user.followersCount} />
-								<Stat label='Following' value={user.followingCount} />
-							</div>
+							{!isMobile && (
+								<div className='flex items-center gap-3 sm:gap-6'>
+									<Stat label='Followers' value={user.followersCount} />
+									<Stat label='Following' value={user.followingCount} />
+								</div>
+							)}
 
 							<Separator orientation='vertical' className='hidden sm:block' />
 
@@ -174,7 +181,7 @@ function App() {
 							</TabsList>
 						</Tabs>
 
-						<Sheet>
+						<Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
 							<SheetTrigger asChild>
 								<Button
 									variant='outline'
