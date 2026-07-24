@@ -124,7 +124,7 @@ export function CountryList({
 	});
 
 	return (
-		<div className='flex h-full flex-col gap-4'>
+		<div className='flex h-full flex-col gap-4 '>
 			<div className='flex items-center justify-between gap-2'>
 				{country ?
 					<div
@@ -144,7 +144,7 @@ export function CountryList({
 								className='h-5 w-7 shrink-0 rounded-sm border border-border/40'
 							/>
 						}
-						<div className='min-w-0 flex items-center flex-col gap-2'>
+						<div className='min-w-0 flex items-center sm:flex-col gap-2'>
 							<button
 								type='button'
 								onClick={() => setCountry(null)}
@@ -325,9 +325,10 @@ export function CountryList({
 							);
 						})}
 					</div>
-				: search ?
-					<EmptyState text={`No ${label}s for  ${getRegionName(country!)}`} />
-				:	<EmptyState text={`No ${label}s match "${deferredSearch}"`} />}
+				:	<EmptyState
+						text={`No ${label}s  ${country && !deferredSearch ? `in ${getRegionName(country)}` : `match ${deferredSearch}`}`}
+					/>
+				}
 			</div>
 		</div>
 	);
