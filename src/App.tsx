@@ -1,4 +1,4 @@
-import { useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
 
 import CredentialForm from "./components/CredentialForm";
 import { useAudience } from "./hooks/useAudience";
@@ -66,11 +66,33 @@ function appReducer(state: AppState, action: AppAction): AppState {
 	}
 }
 
+function useMediaQuery(query: string) {
+	const [matches, setMatches] = useState(() => {
+		if (typeof window !== "undefined") {
+			return window.matchMedia(query).matches;
+		}
+		return false;
+	});
+
+	useEffect(() => {
+		const media = window.matchMedia(query);
+		const listener = (event: MediaQueryListEvent) => setMatches(event.matches);
+
+		media.addEventListener("change", listener);
+		return () => media.removeEventListener("change", listener);
+	}, [query]);
+
+	return matches;
+}
+
 function App() {
 	const [{ country, audienceType, credentials }, dispatch] = useReducer(
 		appReducer,
 		initialState
 	);
+
+	const isMobile = useMediaQuery("(max-width: 767px)");
+	const [sheetOpen, setSheetOpen] = useState(false);
 
 	const { ref: mapContainerRef, size } = useElementSize<HTMLDivElement>();
 	const {
@@ -90,6 +112,7 @@ function App() {
 	const handleResetUser = () => dispatch({ type: "RESET_USER" });
 	const setCountry = (c: string | null) => {
 		dispatch({ type: "SET_COUNTRY", payload: c });
+		if (c && isMobile) setSheetOpen(true);
 	};
 	const setCredentials = (creds: Credentials) =>
 		dispatch({ type: "SET_CREDENTIALS", payload: creds });
@@ -125,10 +148,12 @@ function App() {
 						</div>
 
 						<div className='flex items-center gap-3 sm:gap-4 shrink-0'>
-							<div className='flex items-center gap-3 sm:gap-6'>
-								<Stat label='Followers' value={user.followersCount} />
-								<Stat label='Following' value={user.followingCount} />
-							</div>
+							{!isMobile && (
+								<div className='flex items-center gap-3 sm:gap-6'>
+									<Stat label='Followers' value={user.followersCount} />
+									<Stat label='Following' value={user.followingCount} />
+								</div>
+							)}
 
 							<Separator orientation='vertical' className='hidden sm:block' />
 
@@ -174,7 +199,7 @@ function App() {
 							</TabsList>
 						</Tabs>
 
-						<Sheet>
+						<Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
 							<SheetTrigger asChild>
 								<Button
 									variant='outline'
