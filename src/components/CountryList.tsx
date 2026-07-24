@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { getCountryColor } from "@/lib/getCountryColor";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { RegionIcon } from "@/components/RegionIcon.Panel";
 import { EmptyState } from "@/components/EmptyState.Panel";
 import type { LocalizedGithubProfile } from "@/api/graphql.types";
@@ -22,6 +21,7 @@ interface CountryListProps {
 	data: LocalizedGithubProfile[];
 	country: string | null;
 	setCountry: (arg: string | null) => void;
+	label?: string;
 }
 
 const EMPTY_PROFILES: LocalizedGithubProfile[] = [];
@@ -36,7 +36,16 @@ function formatPercentage(count: number, total: number): string {
 	return `${Math.round(pct)}%`;
 }
 
-export function CountryList({ data, country, setCountry }: CountryListProps) {
+function pluralize(count: number, noun: string): string {
+	return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+export function CountryList({
+	data,
+	country,
+	setCountry,
+	label = "follower"
+}: CountryListProps) {
 	const [search, setSearch] = useState("");
 	const [prevCountry, setPrevCountry] = useState(country);
 	const scrollParentRef = useRef<HTMLDivElement>(null);
@@ -66,9 +75,9 @@ export function CountryList({ data, country, setCountry }: CountryListProps) {
 	}, [data]);
 
 	const sortedCountries = useMemo(() => {
-		return Array.from(usersByCountry.entries()).sort(
-			(a, b) => b[1].length - a[1].length
-		);
+		return Array.from(usersByCountry.entries())
+			.filter(([code]) => code !== UNKNOWN_REGION)
+			.sort((a, b) => b[1].length - a[1].length);
 	}, [usersByCountry]);
 
 	const maxCount = useMemo(
@@ -77,6 +86,7 @@ export function CountryList({ data, country, setCountry }: CountryListProps) {
 	);
 
 	const unknownCount = usersByCountry.get(UNKNOWN_REGION)?.length ?? 0;
+	const locatedCount = totalFollowers - unknownCount;
 
 	const filteredCountries = useMemo(() => {
 		if (!deferredSearch.trim()) return sortedCountries;
@@ -103,7 +113,8 @@ export function CountryList({ data, country, setCountry }: CountryListProps) {
 	}, [selectedProfiles, deferredSearch]);
 
 	const isProfileView = selectedProfiles !== null;
-	const searchLabel = isProfileView ? "Search followers" : "Search countries";
+	const searchLabel = isProfileView ? `Search ${label}s` : "Search countries";
+	const isUnknownSelected = country === UNKNOWN_REGION;
 
 	const virtualizer = useVirtualizer({
 		count: isProfileView ? filteredProfiles.length : filteredCountries.length,
@@ -113,17 +124,27 @@ export function CountryList({ data, country, setCountry }: CountryListProps) {
 	});
 
 	return (
-		<div className='flex h-full flex-col gap-4'>
+		<div className='flex h-full flex-col gap-4 '>
 			<div className='flex items-center justify-between gap-2'>
 				{country ?
 					<div
 						className='flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-2'
-						style={{ background: `${getCountryColor(country)}20` }}>
-						<CountryFlag
-							isoCode={country}
-							className='h-5 w-7 shrink-0 rounded-sm border border-border/40'
-						/>
-						<div className='min-w-0 flex items-center flex-col gap-2'>
+						style={
+							isUnknownSelected ? undefined : (
+								{ background: `${getCountryColor(country)}20` }
+							)
+						}>
+						{isUnknownSelected ?
+							<RegionIcon
+								code={country}
+								className='h-5 w-7 shrink-0 rounded-sm border border-border/40'
+							/>
+						:	<CountryFlag
+								isoCode={country}
+								className='h-5 w-7 shrink-0 rounded-sm border border-border/40'
+							/>
+						}
+						<div className='min-w-0 flex items-center sm:flex-col gap-2'>
 							<button
 								type='button'
 								onClick={() => setCountry(null)}
@@ -136,15 +157,48 @@ export function CountryList({ data, country, setCountry }: CountryListProps) {
 							<Badge
 								variant='outline'
 								className='shrink-0 font-mono text-xs font-normal bg-muted/40 text-muted-foreground'>
-								{selectedProfiles?.length ?? 0} followers
+								{pluralize(selectedProfiles?.length ?? 0, label)}
 							</Badge>
 						</div>
 					</div>
-				:	<Badge
-						variant='outline'
-						className='shrink-0 font-mono text-xs font-normal bg-muted/40 text-muted-foreground'>
-						{sortedCountries.length} countries
-					</Badge>
+				:	<div className='w-full space-y-2'>
+						<div className='flex items-center justify-between gap-2'>
+							<Badge
+								variant='outline'
+								className='shrink-0 font-mono text-xs font-normal bg-muted/40 text-muted-foreground'>
+								{sortedCountries.length} countries
+							</Badge>
+							<span className='shrink-0 font-mono text-xs text-muted-foreground'>
+								{formatPercentage(locatedCount, totalFollowers)} located
+							</span>
+						</div>
+						{unknownCount > 0 && (
+							<button
+								type='button'
+								onClick={() => setCountry(UNKNOWN_REGION)}
+								className='group flex w-full items-center justify-between rounded-lg border border-dashed border-border/50 bg-muted/20 px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40 hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'>
+								<span className='flex min-w-0 items-center gap-3'>
+									<RegionIcon
+										code={UNKNOWN_REGION}
+										className='h-4 w-6 shrink-0 rounded-sm border border-border/40 opacity-70'
+									/>
+									<span className='flex min-w-0 flex-col'>
+										<span className='truncate font-medium text-muted-foreground'>
+											No public location
+										</span>
+										<span className='text-xs font-mono text-muted-foreground'>
+											{formatPercentage(unknownCount, totalFollowers)}
+										</span>
+									</span>
+								</span>
+								<Badge
+									variant='outline'
+									className='shrink-0 font-mono text-xs text-muted-foreground'>
+									{unknownCount}
+								</Badge>
+							</button>
+						)}
+					</div>
 				}
 			</div>
 
@@ -271,18 +325,11 @@ export function CountryList({ data, country, setCountry }: CountryListProps) {
 							);
 						})}
 					</div>
-				:	<EmptyState text={`No followers match "${deferredSearch}"`} />}
+				:	<EmptyState
+						text={`No ${label}s  ${country && !deferredSearch ? `in ${getRegionName(country)}` : `match ${deferredSearch}`}`}
+					/>
+				}
 			</div>
-
-			{!country && unknownCount > 0 && (
-				<>
-					<Separator />
-					<p className='px-1 text-xs text-muted-foreground'>
-						{unknownCount} follower{unknownCount > 1 ? "s" : ""} without a public
-						location aren't shown on the map.
-					</p>
-				</>
-			)}
 		</div>
 	);
 }

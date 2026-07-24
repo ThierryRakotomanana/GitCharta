@@ -91,6 +91,9 @@ function App() {
 		retry
 	} = useAudience(credentials);
 
+	const currentNoun =
+		AUDIENCE_TABS.find((t) => t.value === audienceType)?.noun ?? "follower";
+
 	const handleResetUser = () => dispatch({ type: "RESET_USER" });
 	const setCountry = (c: string | null) => {
 		dispatch({ type: "SET_COUNTRY", payload: c });
@@ -253,6 +256,7 @@ function App() {
 								height={size.height}
 								setCountry={setCountry}
 								audience={currentAudience}
+								selectedCountry={country}
 							/>
 						:	<div className='absolute inset-0 flex items-center justify-center gap-2 text-sm text-muted-foreground'>
 								<Loader2 className='h-4 w-4 animate-spin' />
@@ -265,6 +269,7 @@ function App() {
 							data={currentAudience}
 							country={country}
 							setCountry={setCountry}
+							label={currentNoun}
 						/>
 					</aside>
 				</div>
