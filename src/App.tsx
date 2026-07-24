@@ -25,6 +25,7 @@ import { GithubIcon } from "@/components/icons/lucide-github";
 import { Separator } from "@/components/ui/separator";
 import type { Credentials } from "@/api/graphql.types";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import LandingPage from "@/components/LandingPage";
 
 type AudienceType = "followers" | "following" | "ghosts";
 
@@ -75,6 +76,7 @@ function App() {
 
 	const isMobile = useMediaQuery("(max-width: 767px)");
 	const [sheetOpen, setSheetOpen] = useState(false);
+	const [start, setStart] = useState(false);
 
 	const { ref: mapContainerRef, size } = useElementSize<HTMLDivElement>();
 	const {
@@ -102,7 +104,10 @@ function App() {
 	const setCredentials = (creds: Credentials) =>
 		dispatch({ type: "SET_CREDENTIALS", payload: creds });
 
+	const handleStart = () => setStart((val) => !val);
+
 	const isAuthorized = Boolean(credentials.user);
+	if (!start) return <LandingPage onSubmit={handleStart} />;
 	if (!isAuthorized) return <CredentialForm onSubmit={setCredentials} />;
 
 	const currentAudience = audience?.[audienceType];
