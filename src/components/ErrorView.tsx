@@ -18,12 +18,18 @@ const ErrorIcon = () => (
 export function ErrorView({
 	message,
 	resetAt,
-	onRetry
+	partialCount,
+	onRetry,
+	onSwitchUser
 }: {
 	message: string;
 	resetAt: Date | null;
+	partialCount?: number | null;
 	onRetry: () => void;
+	onSwitchUser?: () => void;
 }) {
+	const isRateLimit = resetAt !== null;
+
 	return (
 		<div className='flex flex-col items-center justify-center min-h-[60vh] gap-5 px-8 text-center'>
 			<div className='w-12 h-12 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive flex items-center justify-center opacity-80'>
@@ -32,9 +38,15 @@ export function ErrorView({
 
 			<div className='max-w-sm'>
 				<h2 className='text-base font-medium text-card-foreground'>
-					Something went wrong
+					{isRateLimit ? "Rate limit reached" : "Something went wrong"}
 				</h2>
 				<p className='text-sm text-destructive mt-2 leading-relaxed'>{message}</p>
+				{typeof partialCount === "number" && partialCount > 0 && (
+					<p className='text-xs text-muted-foreground mt-2'>
+						{partialCount.toLocaleString()} profile
+						{partialCount === 1 ? "" : "s"} were fetched before the limit hit.
+					</p>
+				)}
 				{resetAt && (
 					<p className='text-xs text-muted-foreground mt-2'>
 						Quota refills at{" "}
@@ -48,9 +60,19 @@ export function ErrorView({
 				)}
 			</div>
 
-			<Button variant='outline' onClick={onRetry} className='mt-1'>
-				← Try again
-			</Button>
+			<div className='flex flex-col items-center gap-2 mt-1'>
+				<Button variant='outline' onClick={onRetry}>
+					← Try again
+				</Button>
+				{onSwitchUser && (
+					<button
+						type='button'
+						onClick={onSwitchUser}
+						className='text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline'>
+						Switch user instead
+					</button>
+				)}
+			</div>
 		</div>
 	);
 }

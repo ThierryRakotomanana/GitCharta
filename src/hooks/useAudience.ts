@@ -152,6 +152,7 @@ function reducer(state: AudienceState, action: Action): AudienceState {
 }
 
 export type UseAudienceReturn = AudienceState & {
+	retry: () => void;
 	proceed: () => void;
 	abort: () => void;
 };
@@ -408,6 +409,14 @@ export function useAudience(credentials: Credentials): UseAudienceReturn {
 		runFetch(credentials, controller.signal, true);
 	}, [credentials, runFetch]);
 
+	const retry = useCallback(() => {
+		controllerRef.current?.abort();
+		profileCacheRef.current = null;
+		const controller = new AbortController();
+		controllerRef.current = controller;
+		runFetch(credentials, controller.signal, false);
+	}, [credentials, runFetch]);
+
 	const { user } = credentials;
 
 	useEffect(() => {
@@ -425,5 +434,5 @@ export function useAudience(credentials: Credentials): UseAudienceReturn {
 		};
 	}, [user, credentials, runFetch]);
 
-	return { ...state, abort, proceed };
+	return { ...state, abort, proceed, retry };
 }
