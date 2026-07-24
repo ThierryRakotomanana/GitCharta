@@ -1,5 +1,6 @@
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2, CircleDashed } from "lucide-react";
 import type { Step } from "@/api/graphql.types";
 
@@ -36,7 +37,15 @@ function StepRow({ step }: { step: Step }) {
 	);
 }
 
-export function LoadingView({ steps, pct }: { steps: Step[]; pct: number }) {
+export function LoadingView({
+	steps,
+	pct,
+	onCancel
+}: {
+	steps: Step[];
+	pct: number;
+	onCancel?: () => void;
+}) {
 	return (
 		<div
 			role='status'
@@ -59,6 +68,15 @@ export function LoadingView({ steps, pct }: { steps: Step[]; pct: number }) {
 					))}
 				</CardContent>
 			</Card>
+			{onCancel && (
+				<Button
+					variant='ghost'
+					size='sm'
+					onClick={onCancel}
+					className='text-muted-foreground'>
+					Cancel
+				</Button>
+			)}
 		</div>
 	);
 }

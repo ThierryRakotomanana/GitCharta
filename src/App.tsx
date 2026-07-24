@@ -27,10 +27,10 @@ import type { Credentials } from "@/api/graphql.types";
 
 type AudienceType = "followers" | "following" | "ghosts";
 
-const AUDIENCE_TABS: { value: AudienceType; label: string }[] = [
-	{ value: "followers", label: "Followers" },
-	{ value: "following", label: "Following" },
-	{ value: "ghosts", label: "Ghost Zone" }
+const AUDIENCE_TABS: { value: AudienceType; label: string; noun: string }[] = [
+	{ value: "followers", label: "Followers", noun: "follower" },
+	{ value: "following", label: "Following", noun: "followed account" },
+	{ value: "ghosts", label: "Ghost Zone", noun: "ghost" }
 ];
 
 type AppState = {
@@ -73,12 +73,24 @@ function App() {
 	);
 
 	const { ref: mapContainerRef, size } = useElementSize<HTMLDivElement>();
-	const { status, steps, error, pct, estimate, user, audience, resetAt } =
-		useAudience(credentials);
+	const {
+		status,
+		steps,
+		error,
+		pct,
+		estimate,
+		user,
+		audience,
+		resetAt,
+		partialCount,
+		proceed,
+		retry
+	} = useAudience(credentials);
 
 	const handleResetUser = () => dispatch({ type: "RESET_USER" });
-	const setCountry = (c: string | null) =>
+	const setCountry = (c: string | null) => {
 		dispatch({ type: "SET_COUNTRY", payload: c });
+	};
 	const setCredentials = (creds: Credentials) =>
 		dispatch({ type: "SET_CREDENTIALS", payload: creds });
 
@@ -96,17 +108,17 @@ function App() {
 							<img
 								src={user.avatarUrl}
 								alt={user.login}
-								className='w-8 h-8 rounded-full border border-border shrink-0'
+								className='w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-border shrink-0'
 							/>
 							<div className='flex-1 min-w-0'>
-								<p className='text-sm font-medium text-card-foreground truncate leading-tight'>
+								<p className='text-xs sm:text-sm font-medium text-card-foreground truncate leading-tight'>
 									{user.name ?? user.login}
 								</p>
 								<a
 									href={user.url}
 									target='_blank'
 									rel='noreferrer'
-									className='text-xs text-muted-foreground font-mono hover:text-foreground transition-colors block truncate'>
+									className='text-[11px] sm:text-xs text-muted-foreground font-mono hover:text-foreground transition-colors block truncate'>
 									@{user.login}
 								</a>
 							</div>
@@ -118,7 +130,7 @@ function App() {
 								<Stat label='Following' value={user.followingCount} />
 							</div>
 
-							<Separator orientation='vertical' />
+							<Separator orientation='vertical' className='hidden sm:block' />
 
 							<div className='flex items-center gap-1 sm:gap-2'>
 								<Button
@@ -187,7 +199,9 @@ function App() {
 				</div>
 			)}
 
-			{status === "loading" && <LoadingView steps={steps} pct={pct} />}
+			{status === "loading" && (
+				<LoadingView steps={steps} pct={pct} onCancel={handleResetUser} />
+			)}
 
 			{status === "quota_warning" && estimate && (
 				<div className='flex-1 flex items-center justify-center p-4'>
@@ -201,12 +215,26 @@ function App() {
 								"This will likely exceed your quota."
 							:	"You should have enough headroom to complete."}
 						</AlertDescription>
+						<div className='flex gap-2 mt-3'>
+							<Button size='sm' onClick={proceed}>
+								Continue anyway
+							</Button>
+							<Button size='sm' variant='secondary' onClick={handleResetUser}>
+								Switch user
+							</Button>
+						</div>
 					</Alert>
 				</div>
 			)}
 
 			{status === "error" && error && (
-				<ErrorView message={error} resetAt={resetAt} onRetry={handleResetUser} />
+				<ErrorView
+					message={error}
+					resetAt={resetAt}
+					partialCount={partialCount}
+					onRetry={retry}
+					onSwitchUser={handleResetUser}
+				/>
 			)}
 
 			{status === "success" && currentAudience && (
