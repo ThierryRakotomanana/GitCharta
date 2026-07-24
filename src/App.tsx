@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from "react";
+import { useReducer, useState } from "react";
 
 import CredentialForm from "./components/CredentialForm";
 import { useAudience } from "./hooks/useAudience";
@@ -24,6 +24,7 @@ import { AlertTriangle, List, Loader2, UserRound } from "lucide-react";
 import { GithubIcon } from "@/components/icons/lucide-github";
 import { Separator } from "@/components/ui/separator";
 import type { Credentials } from "@/api/graphql.types";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type AudienceType = "followers" | "following" | "ghosts";
 
@@ -64,25 +65,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
 		default:
 			return state;
 	}
-}
-
-function useMediaQuery(query: string) {
-	const [matches, setMatches] = useState(() => {
-		if (typeof window !== "undefined") {
-			return window.matchMedia(query).matches;
-		}
-		return false;
-	});
-
-	useEffect(() => {
-		const media = window.matchMedia(query);
-		const listener = (event: MediaQueryListEvent) => setMatches(event.matches);
-
-		media.addEventListener("change", listener);
-		return () => media.removeEventListener("change", listener);
-	}, [query]);
-
-	return matches;
 }
 
 function App() {
