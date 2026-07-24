@@ -1,18 +1,21 @@
 <div align="center">
 
-# 🗺️ GitHub Audience Map
+# 🗺️ GitCharta
 
 **See exactly who's in your GitHub network : and where they're building from.**
 
 An interactive world map that visualizes the geographic distribution of your followers, the people you follow, and the "ghosts" who don't follow you back.
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://github-audience-atlas.vercel.app/)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](#roadmap)
-[![Status](https://img.shields.io/badge/status-active--development-success.svg)](#roadmap)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
-[![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](#license)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](#-roadmap)
+[![Status](https://img.shields.io/badge/status-active--development-success.svg)](#-roadmap)
+[![Token](https://img.shields.io/badge/PAT-optional-blue.svg)](#-prerequisites)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#-contributing)
+[![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](#-license)
 
-**🔗 [Try it live](https://github-audience-atlas.vercel.app/) : 100% client-side, your token never leaves your browser.**
+**🔗 [Try it live](https://github-audience-atlas.vercel.app/) : no token required to start, bring your own PAT any time to skip the shared demo limit.**
+
+> **Note:** the badges and links above still point at the `github-audience-atlas` repo/deployment until it's migrated to the new `gitcharta` name — update them once that's done.
 
 [Live Demo](https://github-audience-atlas.vercel.app/) • [Features](#-key-features) • [Security](#-security--privacy) • [Quick Start](#-quick-start) • [Usage](#-usage) • [Architecture](#-how-it-works) • [Contributing](#-contributing)
 
@@ -21,7 +24,7 @@ An interactive world map that visualizes the geographic distribution of your fol
 <br>
 
 <p align="center">
-  <img src="./public/presentation-map.png" alt="GitHub Audience Map : interactive world map preview" width="1000">
+  <img src="./public/presentation-map.png" alt="GitCharta : interactive world map preview" width="1000">
 </p>
 
 ---
@@ -51,11 +54,13 @@ GitHub gives you raw lists of followers and following : but no sense of who thes
 
 ### The Solution
 
-**GitHub Audience Map** turns your network data into a single, explorable world map. Point it at any GitHub account and it plots:
+**GitCharta** turns your network data into a single, explorable world map. Point it at any GitHub account and it plots:
 
 - 🌍 Where your **audience** is physically located
 - 🌍 Where the people **you learn from** are based
-- 👻 Which of them are **ghosts** one way follows with no reciprocity(don't follow you back)
+- 👻 Which of them are **ghosts** — one-way follows with no reciprocity (don't follow you back)
+
+You don't need anything to try it — a shared, rate-limited demo token gets you a map with just a username. Add your own Personal Access Token whenever you want higher limits; see [Security & Privacy](#-security--privacy) for exactly what that does and doesn't change.
 
 ### Why It Matters
 
@@ -69,36 +74,49 @@ GitHub gives you raw lists of followers and following : but no sense of who thes
 
 ## 🔒 Security & Privacy
 
-> **TLDR : Your token never leaves your browser.** This is a static, 100% client-side app. There is no backend, no database, and nothing is logged. Your PAT is used to call the GitHub API directly from your browser and lives only in memory for that page session never written to disk, `localStorage`, `sessionStorage`, or cookies, and gone the moment you refresh or close the tab.
+> **TLDR:** Bring your own token and it never leaves your browser — no backend involved, full stop. Skip the token and you're using a shared, rate-limited demo token relayed through GitCharta's backend instead, since you haven't given us anything to protect in the first place.
 
-Pasting a token into a random website is normally bad advice, so here's exactly why this one is different, and how to check it yourself instead of taking our word for it:
+Pasting a token into a random website is normally bad advice, so here's exactly how each mode works, and how to check it yourself instead of taking our word for it.
 
-| Claim                     | What it means                                                                                                                                                             |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **No backend**            | The app is a static single-page app. There is no server-side code that can receive, log, or store your token.                                                             |
-| **Direct to GitHub only** | Every API call goes straight from your browser to `api.github.com` over HTTPS. Nothing is proxied through any other server.                                               |
-| **In-memory only**        | The token is held in JavaScript state for the current session, **not** persisted to `localStorage`, `sessionStorage`, or cookies. It's discarded on refresh or tab close. |
-| **Open source**           | The source is public. Don't take this README's word for it, read the code yourself, or fork it and run it locally.                                                        |
+### If you bring your own PAT
+
+| Claim                   | What it means                                                                                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **No backend involved** | Requests go straight from your browser to `api.github.com` and `api.github.com/graphql`. GitCharta's backend is never called on this path.                         |
+| **In-memory only**      | Your PAT lives in JavaScript state for the current session — **not** persisted to `localStorage`, `sessionStorage`, or cookies. Discarded on refresh or tab close. |
+| **Open source**         | Don't take this README's word for it — read the code, or fork it and run it locally.                                                                               |
+
+### If you don't (demo mode)
+
+| Claim                          | What it means                                                                                                                                      |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **No token needed**            | You can generate a map with just a GitHub username.                                                                                                |
+| **Shared token, server-side**  | Your request is relayed through GitCharta's backend, which attaches one server-held token shared by every demo user. Expect throttling under load. |
+| **Nothing personal to expose** | You haven't handed us any credentials in this mode, so there's no PAT of yours for the backend to leak.                                            |
+
+You can switch modes at any point — paste a PAT mid-session and GitCharta drops the backend entirely for the rest of that session.
 
 **Verify it yourself before pasting in any token:**
 
 1. Open your browser's DevTools → **Network** tab.
-2. Paste in a token (ideally a throwaway, read-only one) and generate a map.
-3. Confirm every outgoing request goes to `api.github.com` and only there.
+2. Paste in a token (ideally a throwaway, `read:user`-scoped one) and generate a map.
+3. Confirm every outgoing request with your token attached goes to `api.github.com` / `api.github.com/graphql`, and only there. Requests to GitCharta's own backend should disappear entirely once a PAT is present.
 
-> **Best practice still applies.** Use a token scoped to just `read:user`, and revoke it afterward if you're only trying the tool out. This section describes how the app itself is built, it doesn't replace treating any PAT like a password.
+> **Best practice still applies.** Use a token scoped to just `read:user`, and revoke it afterward if you're only trying the tool out. This section describes how the app itself is built — it doesn't replace treating any PAT like a password.
 
 ---
 
 ## ✨ Key Features
 
-> Currently shipping as **v1**. See the [Roadmap](#-roadmap) for what's next.
+> Actively evolving — see the [Roadmap](#-roadmap) for what's next.
 
-| Category         | Description                                                                  |
-| ---------------- | ---------------------------------------------------------------------------- |
-| 👥 **Followers** | Geographic distribution of developers who follow your work                   |
-| 🔭 **Following** | Where the people you follow and learn from are located                       |
-| 👻 **Ghosts**    | Non-reciprocal relationships, accounts you follow that don't follow you back |
+| Category          | Description                                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------------------------- |
+| 👥 **Followers**  | Geographic distribution of developers who follow your work                                               |
+| 🔭 **Following**  | Where the people you follow and learn from are located                                                   |
+| 👻 **Ghosts**     | Non-reciprocal relationships — accounts you follow that don't follow you back                            |
+| 📍 **Unlocated**  | A dedicated view for accounts without a usable public location, so nobody just vanishes from the picture |
+| 📊 **Statistics** | At-a-glance numbers: total accounts mapped, top countries, ghost ratio, and more                         |
 
 ---
 
@@ -106,24 +124,26 @@ Pasting a token into a random website is normally bad advice, so here's exactly 
 
 > **Note:** The fields below are placeholders : replace them with your project's actual stack so contributors know what they're working with before they clone the repo.
 
-| Layer                   | Technology                                         |
-| ----------------------- | -------------------------------------------------- |
-| Frontend                | `React, Vite, TypeScript`                          |
-| Mapping / Visualization | `Custom Geocoding & D3`                            |
-| Data Source             | [GitHub REST API](https://docs.github.com/en/rest) |
-| Hosting / Deployment    | `GitHub  / Vercel`                                 |
-| Package Manager         | `npm`                                              |
+| Layer                      | Technology                                                                                                                                                       |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend                   | `React, Vite, TypeScript`                                                                                                                                        |
+| Mapping / Visualization    | `Custom Geocoding & D3`                                                                                                                                          |
+| Data Source                | [GitHub GraphQL API](https://docs.github.com/en/graphql) (primary) + [GitHub REST API](https://docs.github.com/en/rest) (fallback for fields GraphQL leaves out) |
+| Backend (demo-token proxy) | `TBD` — a small serverless function that holds the shared token server-side only                                                                                 |
+| Hosting / Deployment       | `Vercel` — static frontend, plus a serverless function for the demo-token backend                                                                                |
+| Package Manager            | `npm`                                                                                                                                                            |
 
 ---
 
 ## ✅ Prerequisites
 
-Before you begin, make sure you have:
+Nothing, to start. GitCharta ships with a shared demo token, so pointing it at a GitHub username works with zero setup on your end — it's just rate-limited across every demo user.
 
-- A **GitHub account**
-- A **GitHub Personal Access Token (PAT)** see below
+Optional, if you want higher limits or to skip the backend entirely:
 
-### Generating a Personal Access Token
+- A **GitHub Personal Access Token (PAT)** — see below.
+
+### Generating a Personal Access Token (optional)
 
 1. Go to **GitHub → Settings → Developer settings → Personal access tokens**.
 2. Generate a new token with the following scope:
@@ -133,9 +153,9 @@ Before you begin, make sure you have:
    | `read:user` | Read your profile and follower/following data |
 
 > **🔒 Security Note**
-> Treat your PAT like a password regardless of where you paste it. See [Security & Privacy](#-security--privacy) for exactly how this app handles your token (spoiler: it never leaves your browser).
+> Treat your PAT like a password regardless of where you paste it. See [Security & Privacy](#-security--privacy) for exactly how this app handles your token (spoiler: with your own PAT, it never leaves your browser or touches our backend).
 
-> **📌 Looking ahead:** the planned "Direct Unfollow" feature (see [Roadmap](#-roadmap)) will require the additional `user:follow` scope. You don't need it for v1.
+> **📌 Looking ahead:** the planned "Direct Unfollow" feature (see [Roadmap](#-roadmap)) will require the additional `user:follow` scope. You don't need it today.
 
 ---
 
@@ -143,7 +163,7 @@ Before you begin, make sure you have:
 
 ### Option A : Use the Live App (fastest)
 
-No install required, just open **[github-audience-atlas.vercel.app](https://github-audience-atlas.vercel.app/)** and go straight to [Usage](#-usage). See [Security & Privacy](#-security--privacy) for how your token is (and isn't) handled.
+No install, no token required. Open **[github-audience-atlas.vercel.app](https://github-audience-atlas.vercel.app/)**, enter a username, and go straight to [Usage](#-usage). Add your own PAT any time to skip the shared demo limit — see [Security & Privacy](#-security--privacy) for exactly how that changes what leaves your browser.
 
 ### Option B : Run It Locally
 
@@ -159,28 +179,29 @@ npm install
 npm run dev
 ```
 
+Running it this way puts you in BYO-PAT mode by default — since there's no shared token configured locally, you'll paste your own in the UI. To also exercise the demo/shared-token flow locally, set `DEMO_GITHUB_TOKEN` below.
+
 ### Environment Variables
 
-If you prefer supplying your token via environment variable instead of pasting it into the UI each time, create a `.env` file in the project root:
-
-| Variable       | Required | Description                | Example                    |
-| -------------- | -------- | -------------------------- | -------------------------- |
-| `GITHUB_TOKEN` | Optional | Your Personal Access Token | `ghp_xxxxxxxxxxxxxxxxxxxx` |
+| Variable            | Used by      | Required                                                   | Description                                                                                                                          |
+| ------------------- | ------------ | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `DEMO_GITHUB_TOKEN` | Backend only | Only if you want to run the shared demo-token flow locally | A token the backend uses to serve requests from visitors who haven't supplied their own PAT. Never bundled or exposed to the client. |
 
 ```bash
 # .env.example
-GITHUB_TOKEN=your_personal_access_token_here
+DEMO_GITHUB_TOKEN=your_shared_token_here
 ```
 
-> ⚠️ Add `.env` to your `.gitignore` : never commit real tokens.
+> ⚠️ Add `.env` to your `.gitignore` : never commit real tokens, shared or personal.
+> Your own PAT is entered in the UI at runtime and is never read from `.env` — keeping it out of any file that could end up committed is the whole point.
 
 ---
 
 ## 💻 Usage
 
-1. **Launch** the app, open the [live version](https://github-audience-atlas.vercel.app/), or run it locally with `npm run dev`.
-2. **Enter** your GitHub username.
-3. **Paste** your Personal Access Token.
+1. **Launch** the app — open the [live version](https://github-audience-atlas.vercel.app/), or run it locally with `npm run dev`.
+2. **Enter** the GitHub username you want to map.
+3. _(Optional)_ **Paste** your own Personal Access Token to skip the shared demo limit.
 4. Click **Generate Map** and explore your network on the interactive globe.
 
 ---
@@ -191,17 +212,26 @@ At a high level, the app follows this pipeline:
 
 ```mermaid
 flowchart LR
-    A[Username + PAT] --> B[GitHub REST API]
-    B --> C[Fetch Followers / Following]
-    C --> D[Categorize: Follower / Following / Ghost]
-    D --> E[Resolve Location Data]
-    E --> F[Render Interactive World Map]
+    A[Username + optional PAT] --> B{PAT provided?}
+    B -->|Yes| C[Browser calls GitHub API directly]
+    B -->|No| D[Browser calls GitCharta backend]
+    D --> E[Backend attaches shared token]
+    C --> F[GraphQL — bulk fetch followers / following]
+    E --> F
+    F --> G{Fields missing?}
+    G -->|Yes| H[REST fallback fills the gaps]
+    G -->|No| I[Categorize: Follower / Following / Ghost]
+    H --> I
+    I --> J[Resolve location per profile]
+    J --> K[Render map + stats]
 ```
 
-1. **Fetch** : Authenticated calls to the GitHub REST API retrieve your followers and following lists.
-2. **Categorize** : Accounts are cross-referenced to identify followers, following, and non-reciprocal "ghosts."
-3. **Resolve** : Each account's public location field is used to place it on the map.
-4. **Render** : Results are plotted on an interactive, explorable world map.
+1. **Input** : You provide a GitHub username to map, and optionally your own PAT.
+2. **Route** : With a PAT, your browser talks to GitHub directly. Without one, the request goes through GitCharta's backend, which attaches a shared, rate-limited token — your own credentials are never part of this path, since you didn't provide any.
+3. **Fetch** : The GitHub GraphQL API is queried first, since it can pull followers, following, and profile fields in far fewer round trips than REST. Anything GraphQL leaves out is recovered with targeted REST calls.
+4. **Categorize** : Accounts are cross-referenced to identify followers, following, and non-reciprocal "ghosts."
+5. **Resolve** : Each account's public location field is used to place it on the map; accounts without one land in the dedicated unlocated view instead of disappearing.
+6. **Render** : Results are plotted on an interactive, explorable world map, alongside the statistics panel.
 
 ---
 
@@ -209,12 +239,16 @@ flowchart LR
 
 Planned for upcoming releases:
 
-| Status | Feature                  | Description                                           | Notes                            |
-| ------ | ------------------------ | ----------------------------------------------------- | -------------------------------- |
-| ⬜     | **Direct Unfollow**      | Unfollow "ghosts" straight from the map interface     | Requires `user:follow` PAT scope |
-| ⬜     | **Unmapped Users View**  | Dedicated list for accounts without location data     |                                  |
-| ⬜     | **Advanced Color Modes** | Heatmap, radar view, and a "Contribution Green" theme |                                  |
-| ⬜     | **UI/UX Overhaul**       | Ongoing improvements to interface and user flow       |                                  |
+| Status | Feature                  | Description                                                             | Notes                            |
+| ------ | ------------------------ | ----------------------------------------------------------------------- | -------------------------------- |
+| ⬜     | **Map screenshots**      | Export your map as an image to share or drop into a README              |                                  |
+| ⬜     | **Zoom & pan**           | Get in close on any region instead of squinting at the whole world      |                                  |
+| ⬜     | **Stargazer maps**       | Map the people starring your repos, not just your followers             |                                  |
+| ⬜     | **GitHub profile badge** | Embed a live badge of your map straight into your GitHub profile README |                                  |
+| ⬜     | **Coverage badge**       | A badge showing what percentage of the world your audience covers       |                                  |
+| ⬜     | **Direct Unfollow**      | Unfollow "ghosts" straight from the map interface                       | Requires `user:follow` PAT scope |
+| ⬜     | **Advanced Color Modes** | Heatmap, radar view, and a "Contribution Green" theme                   |                                  |
+| ⬜     | **UI/UX Overhaul**       | Ongoing improvements to interface and user flow                         |                                  |
 
 Have an idea? [Open an issue](../../issues) to suggest a feature.
 
