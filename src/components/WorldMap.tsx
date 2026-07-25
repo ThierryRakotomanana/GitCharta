@@ -1,13 +1,13 @@
-import { useMemo } from "react";
 import type { LocalizedGithubProfile } from "@/api/graphql.types";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
-import { scaleLog } from "d3-scale";
 import { Button } from "@/components/ui/button";
 import { Camera, Check } from "lucide-react";
 import { useMapStats } from "@/hooks/useMapStats";
 import { useMapSnapshot } from "@/hooks/useMapSnapshot";
 import { useCountryPaths, type WorldGeoJson } from "@/hooks/useCountryPaths";
+import { useHeatScale } from "@/hooks/useHeatScale";
+import { useProfilesByCountry } from "@/hooks/useProfilesByCountry";
 
 export interface WorldMapProps {
 	width: number;
@@ -35,27 +35,8 @@ export const WorldMap = ({
 	} = useGeoJson<WorldGeoJson>(url);
 
 	const { mapPaths, spherePath } = useCountryPaths(geoJson, width, height);
-
-	const profilesByCountry = useMemo(() => {
-		return audience.reduce((acc, profile) => {
-			const regionalProfiles = acc.get(profile.country) ?? [];
-			regionalProfiles.push(profile);
-			return acc.set(profile.country, regionalProfiles);
-		}, new Map<string, LocalizedGithubProfile[]>());
-	}, [audience]);
-
-	const maxCount = useMemo(
-		() =>
-			Math.max(0, ...Array.from(profilesByCountry.values()).map((p) => p.length)),
-		[profilesByCountry]
-	);
-	const heatScale = useMemo(() => {
-		const domainMax = Math.max(1, maxCount);
-		return scaleLog()
-			.domain([1, domainMax + 1])
-			.range([0.22, 0.95])
-			.clamp(true);
-	}, [maxCount]);
+	const profilesByCountry = useProfilesByCountry(audience);
+	const heatScale = useHeatScale(profilesByCountry);
 
 	const stats = useMapStats(audience, profilesByCountry);
 	const { svgRef, handleExport, isExporting, justExported } = useMapSnapshot({
