@@ -1,10 +1,13 @@
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { LocalizedGithubProfile } from "@/api/graphql.types";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
+import { getRegionName, UNKNOWN_REGION } from "@/lib/region";
 import { geoNaturalEarth1, geoPath } from "d3-geo";
 import { scaleLog } from "d3-scale";
 import type { Geometry } from "geojson";
-import { useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Camera, Check } from "lucide-react";
 
 interface GeoProperties {
 	NAME_EN: string;
@@ -30,6 +33,56 @@ export interface WorldMapProps {
 	selectedCountry?: string | null;
 }
 
+function drawStatsCard(
+	ctx: CanvasRenderingContext2D,
+	viewportHeight: number,
+	stats: {
+		coveragePct: number;
+		unlocatedPct: number;
+		topCountryName: string;
+		topCountryPct: number;
+		cardBg: string;
+		border: string;
+		foreground: string;
+		muted: string;
+	}
+) {
+	const pad = 14;
+	const cardW = 200;
+	const cardH = 92;
+	const x = pad;
+	const y = viewportHeight - cardH - pad;
+	const radius = 10;
+
+	ctx.save();
+	ctx.beginPath();
+	ctx.moveTo(x + radius, y);
+	ctx.arcTo(x + cardW, y, x + cardW, y + cardH, radius);
+	ctx.arcTo(x + cardW, y + cardH, x, y + cardH, radius);
+	ctx.arcTo(x, y + cardH, x, y, radius);
+	ctx.arcTo(x, y, x + cardW, y, radius);
+	ctx.closePath();
+	ctx.fillStyle = stats.cardBg;
+	ctx.fill();
+	ctx.strokeStyle = stats.border;
+	ctx.lineWidth = 1;
+	ctx.stroke();
+
+	ctx.fillStyle = stats.foreground;
+	ctx.font = "600 12px system-ui, -apple-system, sans-serif";
+	ctx.fillText(
+		`Top: ${stats.topCountryName} (${stats.topCountryPct}%)`,
+		x + 14,
+		y + 26
+	);
+
+	ctx.fillStyle = stats.muted;
+	ctx.font = "500 11px system-ui, -apple-system, sans-serif";
+	ctx.fillText(`${stats.coveragePct}% of audience located`, x + 14, y + 50);
+	ctx.fillText(`${stats.unlocatedPct}% without a public location`, x + 14, y + 70);
+	ctx.restore();
+}
+
 export const WorldMap = ({
 	width,
 	height,
@@ -46,6 +99,10 @@ export const WorldMap = ({
 		error: loadError,
 		retry: setReloadKey
 	} = useGeoJson<WorldGeoJson>(url);
+
+	const svgRef = useRef<SVGSVGElement>(null);
+	const [isExporting, setIsExporting] = useState(false);
+	const [justExported, setJustExported] = useState(false);
 
 	const projection = useMemo(() => {
 		return geoNaturalEarth1().fitSize([width, height], { type: "Sphere" });
@@ -88,6 +145,100 @@ export const WorldMap = ({
 			.clamp(true);
 	}, [maxCount]);
 
+	const mapStats = useMemo(() => {
+		const total = audience.length;
+		const unknownCount = profilesByCountry.get(UNKNOWN_REGION)?.length ?? 0;
+		const locatedCount = total - unknownCount;
+
+		let topCountry: { code: string; count: number } | null = null;
+		for (const [code, profiles] of profilesByCountry) {
+			if (code === UNKNOWN_REGION) continue;
+			if (!topCountry || profiles.length > topCountry.count) {
+				topCountry = { code, count: profiles.length };
+			}
+		}
+
+		return {
+			coveragePct: total > 0 ? Math.round((locatedCount / total) * 100) : 0,
+			unlocatedPct: total > 0 ? Math.round((unknownCount / total) * 100) : 0,
+			topCountryName: topCountry ? getRegionName(topCountry.code) : "—",
+			topCountryPct:
+				topCountry && total > 0 ? Math.round((topCountry.count / total) * 100) : 0
+		};
+	}, [audience, profilesByCountry]);
+
+	const resolveCssVar = useCallback((name: string, fallback: string): string => {
+		if (typeof window === "undefined") return fallback;
+		const value = getComputedStyle(document.documentElement)
+			.getPropertyValue(name)
+			.trim();
+		return value || fallback;
+	}, []);
+
+	const handleExport = useCallback(async () => {
+		if (!svgRef.current) return;
+		setIsExporting(true);
+		try {
+			const clone = svgRef.current.cloneNode(true) as SVGSVGElement;
+
+			let markup = new XMLSerializer().serializeToString(clone);
+			markup = markup.replace(/var\((--[\w-]+)\)/g, (_, name: string) =>
+				resolveCssVar(name, "#94a3b8")
+			);
+
+			const svgBlob = new Blob([markup], { type: "image/svg+xml;charset=utf-8" });
+			const svgUrl = URL.createObjectURL(svgBlob);
+
+			const image = new Image();
+			const loaded = new Promise<void>((resolve, reject) => {
+				image.onload = () => resolve();
+				image.onerror = () => reject(new Error("Could not render the map image."));
+			});
+			image.src = svgUrl;
+			await loaded;
+
+			const dpr = Math.min(window.devicePixelRatio || 1, 3);
+			const canvas = document.createElement("canvas");
+			canvas.width = width * dpr;
+			canvas.height = height * dpr;
+			const ctx = canvas.getContext("2d");
+			if (!ctx) throw new Error("Canvas isn't supported here.");
+			ctx.scale(dpr, dpr);
+
+			ctx.fillStyle = resolveCssVar("--background", "#ffffff");
+			ctx.fillRect(0, 0, width, height);
+			ctx.drawImage(image, 0, 0, width, height);
+			URL.revokeObjectURL(svgUrl);
+
+			drawStatsCard(ctx, height, {
+				coveragePct: mapStats.coveragePct,
+				unlocatedPct: mapStats.unlocatedPct,
+				topCountryName: mapStats.topCountryName,
+				topCountryPct: mapStats.topCountryPct,
+				cardBg: resolveCssVar("--card", "#ffffff"),
+				border: resolveCssVar("--border", "#e2e8f0"),
+				foreground: resolveCssVar("--card-foreground", "#0f172a"),
+				muted: resolveCssVar("--muted-foreground", "#64748b")
+			});
+
+			canvas.toBlob((blob) => {
+				if (!blob) return;
+				const blobUrl = URL.createObjectURL(blob);
+				const link = document.createElement("a");
+				link.href = blobUrl;
+				link.download = "audience-atlas.png";
+				link.click();
+				URL.revokeObjectURL(blobUrl);
+				setJustExported(true);
+				setTimeout(() => setJustExported(false), 1800);
+			}, "image/png");
+		} catch {
+			setIsExporting(false);
+			return;
+		}
+		setIsExporting(false);
+	}, [width, height, mapStats, resolveCssVar]);
+
 	if (loadError) {
 		return (
 			<div
@@ -115,66 +266,86 @@ export const WorldMap = ({
 	}
 
 	return (
-		<svg width={width} height={height} className='bg-(--map-space)'>
-			<g>
-				<path
-					d={pathGenerator({ type: "Sphere" }) as string}
-					fill='var(--map-water)'
-				/>
-			</g>
-			<defs>
-				<filter id='map-glow' x='-30%' y='-30%' width='150%' height='150%'>
-					<feGaussianBlur stdDeviation='6' result='blur' />
-					<feFlood floodColor='var(--primary)' floodOpacity='0.55' result='color' />
-					<feComposite in='color' in2='blur' operator='in' result='coloredGlow' />
-					<feComposite
-						in='coloredGlow'
-						in2='SourceAlpha'
-						operator='out'
-						result='hollowGlow'
-					/>
-					<feMerge>
-						<feMergeNode in='hollowGlow' />
-						<feMergeNode in='SourceGraphic' />
-					</feMerge>
-				</filter>
-			</defs>
-			<g>
-				{mapPaths.map((country) => {
-					const count = profilesByCountry.get(country.id)?.length ?? 0;
-					const hasData = count > 0;
-					const isSelected =
-						selectedCountry !== null && country.id === selectedCountry;
-					return (
-						<path
-							key={`${country.id}-${country.name}`}
-							d={country.svgPath}
-							filter={isSelected ? "url(#map-glow)" : undefined}
-							fill={
-								hasData ?
-									`hsl(var(--signal) / ${heatScale(count).toFixed(2)})`
-								:	MAP_BASE_STYLING.defaultFill
-							}
-							className={`transition-colors duration-300 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none focus-visible:stroke-[2.5px] focus-visible:stroke-ring ${
-								isSelected ? "stroke-[2px] stroke-primary" : "stroke-[0.05px]"
-							}`}
-							tabIndex={0}
-							role='button'
-							aria-pressed={isSelected}
-							aria-label={`${country.name}, ${hasData ? `${count} follower${count > 1 ? "s" : ""}` : "no followers"}`}
-							onClick={() => {
-								setCountry(country.id);
-							}}
-							onKeyDown={(e) => {
-								if (e.key === "Enter" || e.key === " ") {
-									e.preventDefault();
-									setCountry(country.id);
-								}
-							}}
+		<div className='relative' style={{ width, height }}>
+			<svg ref={svgRef} width={width} height={height} className='bg-(--map-space)'>
+				<defs>
+					<filter id='map-glow' x='-60%' y='-60%' width='220%' height='220%'>
+						<feGaussianBlur stdDeviation='6' result='blur' />
+						<feFlood
+							floodColor='var(--primary)'
+							floodOpacity='0.55'
+							result='color'
 						/>
-					);
-				})}
-			</g>
-		</svg>
+						<feComposite in='color' in2='blur' operator='in' result='coloredGlow' />
+						<feComposite
+							in='coloredGlow'
+							in2='SourceAlpha'
+							operator='out'
+							result='hollowGlow'
+						/>
+						<feMerge>
+							<feMergeNode in='hollowGlow' />
+							<feMergeNode in='SourceGraphic' />
+						</feMerge>
+					</filter>
+				</defs>
+				<g>
+					<path
+						d={pathGenerator({ type: "Sphere" }) as string}
+						fill='var(--map-water)'
+					/>
+				</g>
+				<g>
+					{mapPaths.map((country) => {
+						const count = profilesByCountry.get(country.id)?.length ?? 0;
+						const hasData = count > 0;
+						const isSelected =
+							selectedCountry !== null && country.id === selectedCountry;
+						return (
+							<path
+								key={`${country.id}-${country.name}`}
+								d={country.svgPath}
+								filter={isSelected ? "url(#map-glow)" : undefined}
+								fill={
+									hasData ?
+										`hsl(var(--signal) / ${heatScale(count).toFixed(2)})`
+									:	MAP_BASE_STYLING.defaultFill
+								}
+								className={`transition-colors duration-300 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none focus-visible:stroke-[2.5px] focus-visible:stroke-ring ${
+									isSelected ? "stroke-[2px] stroke-primary" : "stroke-[0.05px]"
+								}`}
+								tabIndex={0}
+								role='button'
+								aria-pressed={isSelected}
+								aria-label={`${country.name}, ${hasData ? `${count} follower${count > 1 ? "s" : ""}` : "no followers"}`}
+								onClick={() => setCountry(country.id)}
+								onKeyDown={(e) => {
+									if (e.key === "Enter" || e.key === " ") {
+										e.preventDefault();
+										setCountry(country.id);
+									}
+								}}
+							/>
+						);
+					})}
+				</g>
+			</svg>
+
+			<div className='absolute top-3 right-3 z-10'>
+				<Button
+					type='button'
+					size='icon'
+					variant='secondary'
+					onClick={handleExport}
+					disabled={isExporting}
+					title='Save snapshot'
+					aria-label='Save a snapshot of this map with audience stats'
+					className='h-10 w-10 sm:h-9 sm:w-9 bg-card border border-border shadow-sm'>
+					{justExported ?
+						<Check className='h-4 w-4 text-primary' />
+					:	<Camera className={`h-4 w-4 ${isExporting ? "animate-pulse" : ""}`} />}
+				</Button>
+			</div>
+		</div>
 	);
 };
