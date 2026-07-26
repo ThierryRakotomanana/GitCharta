@@ -13,7 +13,6 @@ import {
 import { GithubIcon } from "@/components/icons/lucide-github";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 const PRODUCT_NAME = "GitCharta";
 
@@ -57,7 +56,7 @@ const FEATURES = [
 	{
 		icon: Ghost,
 		title: "Ghost Zone",
-		body: "See exactly who you follow that hasn't followed you back — no more guessing."
+		body: "See exactly who you follow that hasn't followed you bac: no more guessing."
 	},
 	{
 		icon: List,
@@ -123,123 +122,6 @@ function PinMark({
 				</text>
 			:	<circle cx='12' cy='9' r='3' fill='hsl(var(--signal))' />}
 		</svg>
-	);
-}
-
-function MapGridBackdrop({ className = "" }: { className?: string }) {
-	return (
-		<svg
-			viewBox='0 0 400 320'
-			className={className}
-			aria-hidden='true'
-			preserveAspectRatio='xMidYMid slice'>
-			{Array.from({ length: 9 }).map((_, i) => (
-				<line
-					key={`v-${i}`}
-					x1={i * 50}
-					y1={0}
-					x2={i * 50}
-					y2={320}
-					stroke='var(--border)'
-					strokeWidth={1}
-					opacity={0.35}
-				/>
-			))}
-			{Array.from({ length: 7 }).map((_, i) => (
-				<line
-					key={`h-${i}`}
-					x1={0}
-					y1={i * 50}
-					x2={400}
-					y2={i * 50}
-					stroke='var(--border)'
-					strokeWidth={1}
-					opacity={0.35}
-				/>
-			))}
-			<circle cx={120} cy={90} r={2.5} fill='hsl(var(--signal))' opacity={0.5} />
-			<circle cx={300} cy={190} r={2.5} fill='hsl(var(--signal))' opacity={0.5} />
-			<circle cx={230} cy={60} r={2.5} fill='hsl(var(--signal))' opacity={0.4} />
-		</svg>
-	);
-}
-
-function ProfilePreviewCard({ className = "" }: { className?: string }) {
-	const p = EXAMPLE_PROFILE;
-
-	return (
-		<div className={`relative ${className}`}>
-			<style>
-				{`
-					.gc-card-in { opacity: 0; transform: translateY(6px); animation: gc-in 0.5s ease-out forwards; }
-					@keyframes gc-in { to { opacity: 1; transform: translateY(0); } }
-					@media (prefers-reduced-motion: reduce) {
-						.gc-card-in { animation: none; opacity: 1; transform: none; }
-					}
-				`}
-			</style>
-
-			<MapGridBackdrop className='absolute inset-0 -z-10 opacity-70' />
-
-			<div className='gc-card-in rounded-xl border border-border bg-card shadow-sm overflow-hidden'>
-				<div className='flex items-center gap-1.5 border-b border-border bg-muted/40 px-3 py-2'>
-					<span className='w-2 h-2 rounded-full bg-border' />
-					<span className='w-2 h-2 rounded-full bg-border' />
-					<span className='w-2 h-2 rounded-full bg-border' />
-					<span className='ml-2 font-mono text-[10px] text-muted-foreground truncate'>
-						gitcharta.app/{p.login}
-					</span>
-				</div>
-
-				<div className='p-5'>
-					<div className='flex items-start gap-3'>
-						<img
-							src={p.avatarUrl}
-							alt={`${p.name}'s GitHub avatar`}
-							className='w-12 h-12 rounded-full border border-border'
-							loading='lazy'
-							referrerPolicy='no-referrer'
-						/>
-						<div className='min-w-0'>
-							<p className='text-sm font-medium truncate'>{p.name}</p>
-							<p className='text-xs text-muted-foreground font-mono'>@{p.login}</p>
-						</div>
-						<PinMark className='w-5 h-5.5 ml-auto shrink-0 text-muted-foreground' />
-					</div>
-
-					<div className='mt-4 grid grid-cols-2 gap-3'>
-						<div>
-							<p className='text-xl font-semibold tracking-tight'>
-								{Math.round(p.followers / 1000)}k
-							</p>
-							<p className='text-[11px] text-muted-foreground'>followers</p>
-						</div>
-						<div>
-							<p className='text-xl font-semibold tracking-tight'>{p.following}</p>
-							<p className='text-[11px] text-muted-foreground'>following</p>
-						</div>
-					</div>
-
-					<Separator className='my-4' />
-
-					<div className='flex items-center justify-between gap-3'>
-						<div>
-							<p className='text-xs'>{p.location}</p>
-							<p className='font-mono text-[10px] text-muted-foreground'>
-								{p.coordinates}
-							</p>
-						</div>
-						<span className='text-[11px] text-muted-foreground text-right'>
-							{p.org}
-						</span>
-					</div>
-				</div>
-			</div>
-
-			<p className='mt-2.5 text-center text-[11px] text-muted-foreground'>
-				Real public profile data, captured once as an example — not a live call.
-			</p>
-		</div>
 	);
 }
 
@@ -381,7 +263,7 @@ export default function LandingPage({ onSubmit }: { onSubmit: () => void }) {
 								</h1>
 								<p className='mt-4 text-base text-muted-foreground leading-relaxed max-w-md'>
 									{PRODUCT_NAME} fetches your followers and following, works out
-									where they're based, and plots them on a world map — including
+									where they're based, and plots them on a world map : including
 									everyone you follow who hasn't followed back.
 								</p>
 								<div className='mt-7 flex flex-col sm:flex-row sm:items-center gap-3'>
@@ -400,7 +282,8 @@ export default function LandingPage({ onSubmit }: { onSubmit: () => void }) {
 							</div>
 
 							<div className='flex justify-center'>
-								<ProfilePreviewCard className='w-full max-w-85' />
+								<img src={"gitcharta.png"} alt='' />
+								<img className='w-full max-w-85' />
 							</div>
 						</div>
 					</div>
