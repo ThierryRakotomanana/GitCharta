@@ -2,7 +2,7 @@
 
 # 🗺️ GitCharta
 
-**See exactly who's in your GitHub network : and where they're building from.**
+**See who's in your network, where they're building from, and share a snapshot of your global reach with Git Charta.**
 
 An interactive world map that visualizes the geographic distribution of your followers, the people you follow, and the "ghosts" who don't follow you back.
 
@@ -13,7 +13,7 @@ An interactive world map that visualizes the geographic distribution of your fol
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#-contributing)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](#-license)
 
-**🔗 [Try it live](https://github-audience-atlas.vercel.app/) : no token required to start, bring your own PAT any time to skip the shared demo limit.**
+**🔗 [Try it live](https://gitcharta.vercel.app/) : no token required to start, bring your own PAT any time to skip the shared demo limit.**
 
 [Live Demo](https://github-audience-atlas.vercel.app/) • [Features](#-key-features) • [Security](#-security--privacy) • [Quick Start](#-quick-start) • [Usage](#-usage) • [Architecture](#-how-it-works) • [Contributing](#-contributing)
 
@@ -48,7 +48,7 @@ An interactive world map that visualizes the geographic distribution of your fol
 
 ### The Problem
 
-GitHub gives you raw lists of followers and following : but no sense of who these people actually are or where your influence really reaches. It's also easy to lose track of **non-reciprocal relationships**: accounts you follow that never followed back.
+GitHub gives you raw lists of followers and following : it leave you blind. They don't show what culture your network actually have in common or where your influence reaches and it's far too easy to lose track of **non reciprocal relationships**: accounts you follow that never followed back.
 
 ### The Solution
 
