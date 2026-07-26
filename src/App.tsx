@@ -1,14 +1,16 @@
 import { useReducer, useState } from "react";
 
 import CredentialForm from "./components/CredentialForm";
-import { useAudience } from "./hooks/useAudience";
-import { useElementSize } from "./hooks/useElementSize";
-
+import LandingPage from "@/components/LandingPage";
 import { LoadingView } from "./components/LoadingView";
-import { Stat } from "@/components/Stat";
 import { ErrorView } from "@/components/ErrorView";
 import { WorldMap } from "@/components/WorldMap";
 import { CountryList } from "@/components/CountryList";
+import { Stat } from "@/components/Stat";
+
+import { useAudience } from "./hooks/useAudience";
+import { useElementSize } from "./hooks/useElementSize";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,7 +26,6 @@ import { AlertTriangle, List, Loader2, UserRound } from "lucide-react";
 import { GithubIcon } from "@/components/icons/lucide-github";
 import { Separator } from "@/components/ui/separator";
 import type { Credentials } from "@/api/graphql.types";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type AudienceType = "followers" | "following" | "ghosts";
 
@@ -57,7 +58,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 		case "SET_COUNTRY":
 			return { ...state, country: action.payload };
 		case "SET_AUDIENCE_TYPE":
-			return { ...state, audienceType: action.payload, country: null }; // Clears country on tab switch
+			return { ...state, audienceType: action.payload, country: null };
 		case "SET_CREDENTIALS":
 			return { ...state, credentials: action.payload };
 		case "RESET_USER":
@@ -67,7 +68,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 	}
 }
 
-function App() {
+export default function App() {
 	const [{ country, audienceType, credentials }, dispatch] = useReducer(
 		appReducer,
 		initialState
@@ -75,6 +76,7 @@ function App() {
 
 	const isMobile = useMediaQuery("(max-width: 767px)");
 	const [sheetOpen, setSheetOpen] = useState(false);
+	const [start, setStart] = useState(false);
 
 	const { ref: mapContainerRef, size } = useElementSize<HTMLDivElement>();
 	const {
@@ -93,19 +95,21 @@ function App() {
 
 	const currentNoun =
 		AUDIENCE_TABS.find((t) => t.value === audienceType)?.noun ?? "follower";
+	const currentAudience = audience?.[audienceType];
 
 	const handleResetUser = () => dispatch({ type: "RESET_USER" });
 	const setCountry = (c: string | null) => {
 		dispatch({ type: "SET_COUNTRY", payload: c });
 		if (c && isMobile) setSheetOpen(true);
 	};
-	const setCredentials = (creds: Credentials) =>
-		dispatch({ type: "SET_CREDENTIALS", payload: creds });
 
-	const isAuthorized = Boolean(credentials.user);
-	if (!isAuthorized) return <CredentialForm onSubmit={setCredentials} />;
-
-	const currentAudience = audience?.[audienceType];
+	if (!start) return <LandingPage onSubmit={() => setStart(true)} />;
+	if (!credentials.user)
+		return (
+			<CredentialForm
+				onSubmit={(c) => dispatch({ type: "SET_CREDENTIALS", payload: c })}
+			/>
+		);
 
 	return (
 		<div className='h-screen w-screen overflow-hidden bg-background flex flex-col'>
@@ -139,26 +143,22 @@ function App() {
 									<Stat label='Following' value={user.followingCount} />
 								</div>
 							)}
-
 							<Separator orientation='vertical' className='hidden sm:block' />
-
 							<div className='flex items-center gap-1 sm:gap-2'>
 								<Button
 									variant='secondary'
 									size='sm'
 									onClick={handleResetUser}
-									title='Switch to another user'
-									className='h-8 px-2 sm:px-3 gap-1.5 text-xs text-muted-foreground hover:text-foreground'>
+									title='Switch user'
+									className='h-8 px-2 sm:px-3 gap-1.5 text-xs text-muted-foreground'>
 									<UserRound className='h-4 w-4 shrink-0' />
 									<span className='hidden sm:inline font-medium'>Switch User</span>
 								</Button>
-
 								<a
 									href='https://github.com/ThierryRakotomanana/Github-Audience-Atlas'
 									target='_blank'
 									rel='noreferrer'
-									className='p-2 text-muted-foreground hover:text-foreground transition-colors'
-									aria-label='GitHub Repository'>
+									className='p-2 text-muted-foreground hover:text-foreground'>
 									<GithubIcon />
 								</a>
 							</div>
@@ -167,116 +167,122 @@ function App() {
 				</header>
 			)}
 
-			{status === "success" && currentAudience && (
-				<div className='border-b border-border bg-card shrink-0'>
-					<div className='max-w-6xl mx-auto px-4 sm:px-6 py-1 flex items-center justify-between gap-3'>
-						<Tabs
-							value={audienceType}
-							onValueChange={(v) =>
-								dispatch({ type: "SET_AUDIENCE_TYPE", payload: v as AudienceType })
-							}>
-							<TabsList className='bg-muted'>
-								{AUDIENCE_TABS.map((tab) => (
-									<TabsTrigger key={tab.value} value={tab.value}>
-										{tab.label}
-									</TabsTrigger>
-								))}
-							</TabsList>
-						</Tabs>
+			<main className='flex-1 flex flex-col min-h-0 relative overflow-hidden'>
+				{status === "loading" && (
+					<LoadingView steps={steps} pct={pct} onCancel={handleResetUser} />
+				)}
 
-						<Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-							<SheetTrigger asChild>
-								<Button
-									variant='outline'
-									size='icon'
-									className='shrink-0 md:hidden'>
-									<List className='h-4 w-4' />
-									<span className='sr-only'>View country breakdown</span>
+				{status === "quota_warning" && estimate && (
+					<div className='flex-1 flex items-center justify-center p-4'>
+						<Alert className='max-w-md border-warning bg-warning/10 text-warning-foreground [&>svg]:text-warning-foreground'>
+							<AlertTriangle className='h-4 w-4' />
+							<AlertTitle>Approaching rate limit</AlertTitle>
+							<AlertDescription className='text-warning-foreground/90'>
+								{estimate.remaining} requests remaining, {estimate.pointsNeeded}{" "}
+								needed.{" "}
+								{estimate.willExceed ?
+									"This will likely exceed your quota."
+								:	"You should have enough headroom."}
+							</AlertDescription>
+							<div className='flex gap-2 mt-3'>
+								<Button size='sm' onClick={proceed}>
+									Continue anyway
 								</Button>
-							</SheetTrigger>
-							<SheetContent side='right' className='w-72'>
-								<SheetHeader>
-									<SheetTitle>Countries</SheetTitle>
-								</SheetHeader>
+								<Button size='sm' variant='secondary' onClick={handleResetUser}>
+									Switch user
+								</Button>
+							</div>
+						</Alert>
+					</div>
+				)}
+
+				{status === "error" && error && (
+					<ErrorView
+						message={error}
+						resetAt={resetAt}
+						partialCount={partialCount}
+						onRetry={retry}
+						onSwitchUser={handleResetUser}
+					/>
+				)}
+
+				{status === "success" && currentAudience && (
+					<>
+						<div className='border-b border-border bg-card shrink-0'>
+							<div className='max-w-6xl mx-auto px-4 sm:px-6 py-1 flex items-center justify-between gap-3'>
+								<Tabs
+									value={audienceType}
+									onValueChange={(v) =>
+										dispatch({
+											type: "SET_AUDIENCE_TYPE",
+											payload: v as AudienceType
+										})
+									}>
+									<TabsList className='bg-muted'>
+										{AUDIENCE_TABS.map((tab) => (
+											<TabsTrigger key={tab.value} value={tab.value}>
+												{tab.label}
+											</TabsTrigger>
+										))}
+									</TabsList>
+								</Tabs>
+
+								<Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+									<SheetTrigger asChild>
+										<Button
+											variant='outline'
+											size='icon'
+											className='shrink-0 md:hidden'>
+											<List className='h-4 w-4' />
+										</Button>
+									</SheetTrigger>
+									<SheetContent side='right' className='w-72'>
+										<SheetHeader>
+											<SheetTitle>Countries</SheetTitle>
+										</SheetHeader>
+										<CountryList
+											data={currentAudience}
+											country={country}
+											setCountry={setCountry}
+										/>
+									</SheetContent>
+								</Sheet>
+							</div>
+						</div>
+
+						<div className='flex flex-1 items-stretch min-h-0 w-full overflow-hidden'>
+							<div
+								ref={mapContainerRef}
+								className='flex-1 relative overflow-hidden'>
+								{size ?
+									<WorldMap
+										width={size.width}
+										height={size.height}
+										setCountry={setCountry}
+										audience={currentAudience}
+										selectedCountry={country}
+									/>
+								:	<div className='absolute inset-0 flex items-center justify-center gap-2 text-sm text-muted-foreground'>
+										<Loader2 className='h-4 w-4 animate-spin' />
+										Calculating map dimensions...
+									</div>
+								}
+							</div>
+							<aside className='w-64 shrink-0 border-l border-border bg-card py-6 pl-6 pr-2 hidden md:block overflow-y-auto'>
 								<CountryList
 									data={currentAudience}
 									country={country}
 									setCountry={setCountry}
+									label={currentNoun}
 								/>
-							</SheetContent>
-						</Sheet>
-					</div>
-				</div>
-			)}
-
-			{status === "loading" && (
-				<LoadingView steps={steps} pct={pct} onCancel={handleResetUser} />
-			)}
-
-			{status === "quota_warning" && estimate && (
-				<div className='flex-1 flex items-center justify-center p-4'>
-					<Alert className='max-w-md border-warning bg-warning/10 text-warning-foreground [&>svg]:text-warning-foreground'>
-						<AlertTriangle className='h-4 w-4' />
-						<AlertTitle>Approaching rate limit</AlertTitle>
-						<AlertDescription className='text-warning-foreground/90'>
-							{estimate.remaining} requests remaining, {estimate.pointsNeeded}{" "}
-							needed to finish.{" "}
-							{estimate.willExceed ?
-								"This will likely exceed your quota."
-							:	"You should have enough headroom to complete."}
-						</AlertDescription>
-						<div className='flex gap-2 mt-3'>
-							<Button size='sm' onClick={proceed}>
-								Continue anyway
-							</Button>
-							<Button size='sm' variant='secondary' onClick={handleResetUser}>
-								Switch user
-							</Button>
+							</aside>
 						</div>
-					</Alert>
-				</div>
-			)}
-
-			{status === "error" && error && (
-				<ErrorView
-					message={error}
-					resetAt={resetAt}
-					partialCount={partialCount}
-					onRetry={retry}
-					onSwitchUser={handleResetUser}
-				/>
-			)}
-
-			{status === "success" && currentAudience && (
-				<div className='flex flex-1 items-stretch min-h-0 h-0 w-full overflow-hidden'>
-					<main ref={mapContainerRef} className='flex-1 overflow-hidden relative'>
-						{size ?
-							<WorldMap
-								width={size.width}
-								height={size.height}
-								setCountry={setCountry}
-								audience={currentAudience}
-								selectedCountry={country}
-							/>
-						:	<div className='absolute inset-0 flex items-center justify-center gap-2 text-sm text-muted-foreground'>
-								<Loader2 className='h-4 w-4 animate-spin' />
-								Calculating map dimensions...
-							</div>
-						}
-					</main>
-					<aside className='w-64 shrink-0 border-l border-border bg-card py-6 pl-6 pr-2 hidden md:block'>
-						<CountryList
-							data={currentAudience}
-							country={country}
-							setCountry={setCountry}
-							label={currentNoun}
-						/>
-					</aside>
-				</div>
-			)}
+					</>
+				)}
+			</main>
 
 			<footer className='h-10 w-full border-t border-border bg-muted/40 px-4 sm:px-6 flex items-center justify-between text-xs text-muted-foreground shrink-0'>
-				<p>© 2026 Atlas Audience</p>
+				<p>© 2026 GitCharta</p>
 				<div className='flex gap-4'>
 					<a href='#' className='hover:underline'>
 						Privacy
@@ -289,5 +295,3 @@ function App() {
 		</div>
 	);
 }
-
-export default App;
