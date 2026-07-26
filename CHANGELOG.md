@@ -1,3 +1,35 @@
+## 0.2.0
+
+### Minor Changes
+
+- update ui theme and refactor components [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#19](https://github.com/ThierryRakotomanana/GitCharta/pull/19)]
+
+- feat: rebrand project with new landing page and favicon [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#36](https://github.com/ThierryRakotomanana/GitCharta/pull/36)]
+
+- feat: add button to switch to another user & increase the concurrency request [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#26](https://github.com/ThierryRakotomanana/GitCharta/pull/26)]
+
+- feat: add screenshot generation [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#37](https://github.com/ThierryRakotomanana/GitCharta/pull/37)]
+
+- feat(api): migrate to GraphQL with REST fallback and reconciliation layer [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#25](https://github.com/ThierryRakotomanana/GitCharta/pull/25)]
+
+- feat: add github icon link that targets the repos [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#17](https://github.com/ThierryRakotomanana/GitCharta/pull/17)]
+
+- feat: add retry and cancel feature [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#32](https://github.com/ThierryRakotomanana/GitCharta/pull/32)]
+
+- feat: let user to choose between using his PAT or use the demos token [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#28](https://github.com/ThierryRakotomanana/GitCharta/pull/28)]
+
+### Patch Changes
+
+- perf: virtualize audience list as it freeze for a large one [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#27](https://github.com/ThierryRakotomanana/GitCharta/pull/27)]
+
+- fix: adatpt the header to mobile devices [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#33](https://github.com/ThierryRakotomanana/GitCharta/pull/33)]
+
+- fix: apply the glow effect on the selected country [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#31](https://github.com/ThierryRakotomanana/GitCharta/pull/31)]
+
+- fix: make the progressbar dynamic [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#29](https://github.com/ThierryRakotomanana/GitCharta/pull/29)]
+
+- ci: increase the timeout of the ai response [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#20](https://github.com/ThierryRakotomanana/GitCharta/pull/20)]
+
 ## 0.1.0
 
 ### Minor Changes
