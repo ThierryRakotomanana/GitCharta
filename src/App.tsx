@@ -1,4 +1,5 @@
 import { useReducer, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 
 import CredentialForm from "./components/CredentialForm";
 import LandingPage from "@/components/LandingPage";
@@ -292,6 +293,7 @@ export default function App() {
 					</a>
 				</div>
 			</footer>
+			<Analytics />
 		</div>
 	);
 }
