@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import type { LocalizedGithubProfile } from "@/api/graphql.types";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
@@ -7,9 +7,8 @@ import { scaleLog } from "d3-scale";
 import type { Geometry } from "geojson";
 import { Button } from "@/components/ui/button";
 import { Camera, Check } from "lucide-react";
-import { drawMapStatsCard } from "@/lib/drawMapStatsCard";
-import { resolveCssVar } from "@/lib/resolveCssVar";
 import { useMapStats } from "@/hooks/useMapStats";
+import { useMapSnapshot } from "@/hooks/useMapSnapshot";
 
 interface GeoProperties {
 	NAME_EN: string;
@@ -51,10 +50,6 @@ export const WorldMap = ({
 		error: loadError,
 		retry: setReloadKey
 	} = useGeoJson<WorldGeoJson>(url);
-
-	const svgRef = useRef<SVGSVGElement>(null);
-	const [isExporting, setIsExporting] = useState(false);
-	const [justExported, setJustExported] = useState(false);
 
 	const projection = useMemo(() => {
 		return geoNaturalEarth1().fitSize([width, height], { type: "Sphere" });
@@ -98,72 +93,11 @@ export const WorldMap = ({
 	}, [maxCount]);
 
 	const stats = useMapStats(audience, profilesByCountry);
-	const handleExport = useCallback(async () => {
-		if (!svgRef.current) return;
-		setIsExporting(true);
-		try {
-			const clone = svgRef.current.cloneNode(true) as SVGSVGElement;
-
-			let markup = new XMLSerializer().serializeToString(clone);
-			markup = markup.replace(/var\((--[\w-]+)\)/g, (_, name: string) =>
-				resolveCssVar(name, "#94a3b8")
-			);
-
-			const svgBlob = new Blob([markup], { type: "image/svg+xml;charset=utf-8" });
-			const svgUrl = URL.createObjectURL(svgBlob);
-
-			const image = new Image();
-			const loaded = new Promise<void>((resolve, reject) => {
-				image.onload = () => resolve();
-				image.onerror = () => reject(new Error("Could not render the map image."));
-			});
-			image.src = svgUrl;
-			await loaded;
-
-			const dpr = Math.min(window.devicePixelRatio || 1, 3);
-			const canvas = document.createElement("canvas");
-			canvas.width = width * dpr;
-			canvas.height = height * dpr;
-			const ctx = canvas.getContext("2d");
-			if (!ctx) throw new Error("Canvas isn't supported here.");
-			ctx.scale(dpr, dpr);
-
-			ctx.fillStyle = resolveCssVar("--background", "#ffffff");
-			ctx.fillRect(0, 0, width, height);
-			ctx.drawImage(image, 0, 0, width, height);
-			URL.revokeObjectURL(svgUrl);
-
-			drawMapStatsCard(
-				ctx,
-				height,
-				{
-					...stats
-				},
-				{
-					cardBg: resolveCssVar("--card", "#ffffff"),
-					border: resolveCssVar("--border", "#e2e8f0"),
-					foreground: resolveCssVar("--card-foreground", "#0f172a"),
-					muted: resolveCssVar("--muted-foreground", "#64748b")
-				}
-			);
-
-			canvas.toBlob((blob) => {
-				if (!blob) return;
-				const blobUrl = URL.createObjectURL(blob);
-				const link = document.createElement("a");
-				link.href = blobUrl;
-				link.download = "audience-atlas.png";
-				link.click();
-				URL.revokeObjectURL(blobUrl);
-				setJustExported(true);
-				setTimeout(() => setJustExported(false), 1800);
-			}, "image/png");
-		} catch {
-			setIsExporting(false);
-			return;
-		}
-		setIsExporting(false);
-	}, [width, height, stats, resolveCssVar]);
+	const { svgRef, handleExport, isExporting, justExported } = useMapSnapshot({
+		width,
+		height,
+		stats
+	});
 
 	if (loadError) {
 		return (
