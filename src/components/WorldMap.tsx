@@ -2,13 +2,14 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import type { LocalizedGithubProfile } from "@/api/graphql.types";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
-import { getRegionName, UNKNOWN_REGION } from "@/lib/region";
 import { geoNaturalEarth1, geoPath } from "d3-geo";
 import { scaleLog } from "d3-scale";
 import type { Geometry } from "geojson";
 import { Button } from "@/components/ui/button";
 import { Camera, Check } from "lucide-react";
 import { drawMapStatsCard } from "@/lib/drawMapStatsCard";
+import { resolveCssVar } from "@/lib/resolveCssVar";
+import { useMapStats } from "@/hooks/useMapStats";
 
 interface GeoProperties {
 	NAME_EN: string;
@@ -96,36 +97,7 @@ export const WorldMap = ({
 			.clamp(true);
 	}, [maxCount]);
 
-	const mapStats = useMemo(() => {
-		const total = audience.length;
-		const unknownCount = profilesByCountry.get(UNKNOWN_REGION)?.length ?? 0;
-		const locatedCount = total - unknownCount;
-
-		let topCountry: { code: string; count: number } | null = null;
-		for (const [code, profiles] of profilesByCountry) {
-			if (code === UNKNOWN_REGION) continue;
-			if (!topCountry || profiles.length > topCountry.count) {
-				topCountry = { code, count: profiles.length };
-			}
-		}
-
-		return {
-			coveragePct: total > 0 ? Math.round((locatedCount / total) * 100) : 0,
-			unlocatedPct: total > 0 ? Math.round((unknownCount / total) * 100) : 0,
-			topCountryName: topCountry ? getRegionName(topCountry.code) : "—",
-			topCountryPct:
-				topCountry && total > 0 ? Math.round((topCountry.count / total) * 100) : 0
-		};
-	}, [audience, profilesByCountry]);
-
-	const resolveCssVar = useCallback((name: string, fallback: string): string => {
-		if (typeof window === "undefined") return fallback;
-		const value = getComputedStyle(document.documentElement)
-			.getPropertyValue(name)
-			.trim();
-		return value || fallback;
-	}, []);
-
+	const stats = useMapStats(audience, profilesByCountry);
 	const handleExport = useCallback(async () => {
 		if (!svgRef.current) return;
 		setIsExporting(true);
@@ -165,10 +137,7 @@ export const WorldMap = ({
 				ctx,
 				height,
 				{
-					coveragePct: mapStats.coveragePct,
-					unlocatedPct: mapStats.unlocatedPct,
-					topCountryName: mapStats.topCountryName,
-					topCountryPct: mapStats.topCountryPct
+					...stats
 				},
 				{
 					cardBg: resolveCssVar("--card", "#ffffff"),
@@ -194,7 +163,7 @@ export const WorldMap = ({
 			return;
 		}
 		setIsExporting(false);
-	}, [width, height, mapStats, resolveCssVar]);
+	}, [width, height, stats, resolveCssVar]);
 
 	if (loadError) {
 		return (
