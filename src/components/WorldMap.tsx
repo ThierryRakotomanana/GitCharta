@@ -8,6 +8,7 @@ import { scaleLog } from "d3-scale";
 import type { Geometry } from "geojson";
 import { Button } from "@/components/ui/button";
 import { Camera, Check } from "lucide-react";
+import { drawMapStatsCard } from "@/lib/drawMapStatsCard";
 
 interface GeoProperties {
 	NAME_EN: string;
@@ -31,56 +32,6 @@ export interface WorldMapProps {
 	setCountry: (country: string) => void;
 	audience: LocalizedGithubProfile[];
 	selectedCountry?: string | null;
-}
-
-function drawStatsCard(
-	ctx: CanvasRenderingContext2D,
-	viewportHeight: number,
-	stats: {
-		coveragePct: number;
-		unlocatedPct: number;
-		topCountryName: string;
-		topCountryPct: number;
-		cardBg: string;
-		border: string;
-		foreground: string;
-		muted: string;
-	}
-) {
-	const pad = 14;
-	const cardW = 200;
-	const cardH = 92;
-	const x = pad;
-	const y = viewportHeight - cardH - pad;
-	const radius = 10;
-
-	ctx.save();
-	ctx.beginPath();
-	ctx.moveTo(x + radius, y);
-	ctx.arcTo(x + cardW, y, x + cardW, y + cardH, radius);
-	ctx.arcTo(x + cardW, y + cardH, x, y + cardH, radius);
-	ctx.arcTo(x, y + cardH, x, y, radius);
-	ctx.arcTo(x, y, x + cardW, y, radius);
-	ctx.closePath();
-	ctx.fillStyle = stats.cardBg;
-	ctx.fill();
-	ctx.strokeStyle = stats.border;
-	ctx.lineWidth = 1;
-	ctx.stroke();
-
-	ctx.fillStyle = stats.foreground;
-	ctx.font = "600 12px system-ui, -apple-system, sans-serif";
-	ctx.fillText(
-		`Top: ${stats.topCountryName} (${stats.topCountryPct}%)`,
-		x + 14,
-		y + 26
-	);
-
-	ctx.fillStyle = stats.muted;
-	ctx.font = "500 11px system-ui, -apple-system, sans-serif";
-	ctx.fillText(`${stats.coveragePct}% of audience located`, x + 14, y + 50);
-	ctx.fillText(`${stats.unlocatedPct}% without a public location`, x + 14, y + 70);
-	ctx.restore();
 }
 
 export const WorldMap = ({
@@ -210,16 +161,22 @@ export const WorldMap = ({
 			ctx.drawImage(image, 0, 0, width, height);
 			URL.revokeObjectURL(svgUrl);
 
-			drawStatsCard(ctx, height, {
-				coveragePct: mapStats.coveragePct,
-				unlocatedPct: mapStats.unlocatedPct,
-				topCountryName: mapStats.topCountryName,
-				topCountryPct: mapStats.topCountryPct,
-				cardBg: resolveCssVar("--card", "#ffffff"),
-				border: resolveCssVar("--border", "#e2e8f0"),
-				foreground: resolveCssVar("--card-foreground", "#0f172a"),
-				muted: resolveCssVar("--muted-foreground", "#64748b")
-			});
+			drawMapStatsCard(
+				ctx,
+				height,
+				{
+					coveragePct: mapStats.coveragePct,
+					unlocatedPct: mapStats.unlocatedPct,
+					topCountryName: mapStats.topCountryName,
+					topCountryPct: mapStats.topCountryPct
+				},
+				{
+					cardBg: resolveCssVar("--card", "#ffffff"),
+					border: resolveCssVar("--border", "#e2e8f0"),
+					foreground: resolveCssVar("--card-foreground", "#0f172a"),
+					muted: resolveCssVar("--muted-foreground", "#64748b")
+				}
+			);
 
 			canvas.toBlob((blob) => {
 				if (!blob) return;
