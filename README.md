@@ -2,11 +2,11 @@
 
 # 🗺️ GitCharta
 
-**See who's in your network, where they're building from, and share a snapshot of your global reach with Git Charta.**
+**Every follower, stargazer, fork, and PR is a country you've reached. GitCharta turns your GitHub footprint into a map of exactly how far your work travels.**
 
-An interactive world map that visualizes the geographic distribution of your followers, the people you follow, and the "ghosts" who don't follow you back.
+An interactive world map that visualizes the geographic reach of your GitHub network : who's actually there, who's just noise, and who might be the first person from their country to show up on your map.
 
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://github-audience-atlas.vercel.app/)
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://gitcharta.vercel.app/)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](#-roadmap)
 [![Status](https://img.shields.io/badge/status-active--development-success.svg)](#-roadmap)
 [![Token](https://img.shields.io/badge/PAT-optional-blue.svg)](#-prerequisites)
@@ -15,7 +15,7 @@ An interactive world map that visualizes the geographic distribution of your fol
 
 **🔗 [Try it live](https://gitcharta.vercel.app/) : no token required to start, bring your own PAT any time to skip the shared demo limit.**
 
-[Live Demo](https://github-audience-atlas.vercel.app/) • [Features](#-key-features) • [Security](#-security--privacy) • [Quick Start](#-quick-start) • [Usage](#-usage) • [Architecture](#-how-it-works) • [Contributing](#-contributing)
+[Live Demo](https://gitcharta.vercel.app/) • [The Idea](#-the-idea) • [Categories](#-the-four-categories) • [Security](#-security--privacy) • [Quick Start](#-quick-start) • [Usage](#-usage) • [Architecture](#-how-it-works) • [Get in Touch](#-get-in-touch)
 
 </div>
 
@@ -29,7 +29,8 @@ An interactive world map that visualizes the geographic distribution of your fol
 
 ## 📖 Table of Contents
 
-- [Overview](#-overview)
+- [The Idea](#-the-idea)
+- [The Four Categories](#-the-four-categories)
 - [Security & Privacy](#-security--privacy)
 - [Key Features](#-key-features)
 - [Tech Stack](#-tech-stack)
@@ -40,33 +41,34 @@ An interactive world map that visualizes the geographic distribution of your fol
 - [Roadmap](#-roadmap)
 - [Contributing](#-contributing)
 - [License](#-license)
-- [Author & Contact](#-author--contact)
+- [Get in Touch](#-get-in-touch)
 
 ---
 
-## 🎯 Overview
+## 💡 The Idea
 
-### The Problem
+A follower count is just a number. GitCharta asks a different question: **how many places on Earth has your work actually reached?**
 
-GitHub gives you raw lists of followers and following : it leave you blind. They don't show what culture your network actually have in common or where your influence reaches and it's far too easy to lose track of **non reciprocal relationships**: accounts you follow that never followed back.
+Point it at any GitHub account and every follower, every account you follow, every star, fork, or PR stops being a row in a list and becomes a pin on a map. Somewhere in that list, someone might be the very first person from their country to show up on your profile : and a raw count will never tell you that.
 
-### The Solution
+Today, GitCharta maps your **followers** and **following**. Stars, forks, and PRs are next (see the [Roadmap](#-roadmap)) so your whole footprint, not just your social graph, counts toward your reach.
 
-**GitCharta** turns your network data into a single, explorable world map. Point it at any GitHub account and it plots:
+---
 
-- 🌍 Where your **audience** is physically located
-- 🌍 Where the people **you learn from** are based
-- 👻 Which of them are **ghosts** : one-way follows with no reciprocity (don't follow you back)
+## 🧭 The Four Categories
 
-You don't need anything to try it : a shared, rate-limited demo token gets you a map with just a username. Add your own Personal Access Token whenever you want higher limits; see [Security & Privacy](#-security--privacy) for exactly what that does and doesn't change.
+Not every connection is equal, and not every connection is even real. GitCharta sorts every account into one of four buckets:
 
-### Why It Matters
+| Category           | Icon | What it means                                                                                                                              |
+| ------------------ | ---- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Follower**       | 👥   | Someone who follows you : part of your confirmed audience.                                                                                 |
+| **Following**      | 🔭   | Someone you follow : the people and projects you learn from.                                                                               |
+| **Non-reciprocal** | ↗️   | You follow them, they don't follow you back. Still a real account, just a one-way relationship.                                            |
+| **Possible spam**  | 👻   | Accounts that look automated or inactive : no bio, no avatar, no repos, lopsided follow ratios. These don't get counted toward your reach. |
 
-| For                                  | Value                                            |
-| ------------------------------------ | ------------------------------------------------ |
-| **Open-source maintainers**          | Understand the geographic reach of your projects |
-| **Developers growing their network** | Spot patterns in who engages with your work      |
-| **Anyone curious about their graph** | Clean up one-sided "follows" you no longer need  |
+Splitting "one-way follow" from "likely-not-a-real-person" was the single most requested change from early users, and it's the whole reason for this rebrand : a non-reciprocal follow from a real developer is a lead worth knowing about, a spam account is just noise skewing your numbers.
+
+> **How "possible spam" is flagged:** GitCharta uses simple public-profile heuristics (empty bio, no avatar, zero public repos, extreme following-to-follower ratios) to flag likely bots or throwaway accounts. It's a heuristic, not a verdict : you can always inspect any flagged account yourself.
 
 ---
 
@@ -108,13 +110,15 @@ You can switch modes at any point : paste a PAT mid-session and GitCharta drops 
 
 > Actively evolving : see the [Roadmap](#-roadmap) for what's next.
 
-| Category          | Description                                                                                              |
-| ----------------- | -------------------------------------------------------------------------------------------------------- |
-| 👥 **Followers**  | Geographic distribution of developers who follow your work                                               |
-| 🔭 **Following**  | Where the people you follow and learn from are located                                                   |
-| 👻 **Ghosts**     | Non-reciprocal relationships : accounts you follow that don't follow you back                            |
-| 📍 **Unlocated**  | A dedicated view for accounts without a usable public location, so nobody just vanishes from the picture |
-| 📊 **Statistics** | At-a-glance numbers: total accounts mapped, top countries, ghost ratio, and more                         |
+| Category              | Description                                                                                              |
+| --------------------- | -------------------------------------------------------------------------------------------------------- |
+| 🌍 **World map**      | Every account plotted by country, so you see where you've actually reached : not just a number           |
+| 👥 **Followers**      | Geographic distribution of the people who follow your work                                               |
+| 🔭 **Following**      | Where the people and projects you learn from are based                                                   |
+| ↗️ **Non-reciprocal** | Accounts you follow that don't follow back : real connections, one-way                                   |
+| 👻 **Possible spam**  | Likely bot or inactive accounts, flagged and set aside so they don't inflate your reach                  |
+| 📍 **Unlocated**      | A dedicated view for accounts without a usable public location, so nobody just vanishes from the picture |
+| 📊 **Statistics**     | At-a-glance numbers: countries reached, category breakdown, top countries, and more                      |
 
 ---
 
@@ -161,7 +165,7 @@ Optional, if you want higher limits or to skip the backend entirely:
 
 ### Option A : Use the Live App (fastest)
 
-No install, no token required. Open **[github-audience-atlas.vercel.app](https://github-audience-atlas.vercel.app/)**, enter a username, and go straight to [Usage](#-usage). Add your own PAT any time to skip the shared demo limit : see [Security & Privacy](#-security--privacy) for exactly how that changes what leaves your browser.
+No install, no token required. Open **[gitcharta.vercel.app](https://gitcharta.vercel.app/)**, enter a username, and go straight to [Usage](#-usage). Add your own PAT any time to skip the shared demo limit : see [Security & Privacy](#-security--privacy) for exactly how that changes what leaves your browser.
 
 ### Option B : Run It Locally
 
@@ -197,10 +201,10 @@ DEMO_GITHUB_TOKEN=your_shared_token_here
 
 ## 💻 Usage
 
-1. **Launch** the app : open the [live version](https://github-audience-atlas.vercel.app/), or run it locally with `npm run dev`.
+1. **Launch** the app : open the [live version](https://gitcharta.vercel.app/), or run it locally with `npm run dev`.
 2. **Enter** the GitHub username you want to map.
 3. _(Optional)_ **Paste** your own Personal Access Token to skip the shared demo limit.
-4. Click **Generate Map** and explore your network on the interactive globe.
+4. Click **Generate Map** and explore your reach on the interactive globe, broken down into followers, following, non-reciprocal, and possible spam.
 
 ---
 
@@ -218,7 +222,7 @@ flowchart LR
     E --> F
     F --> G{Fields missing?}
     G -->|Yes| H[REST fallback fills the gaps]
-    G -->|No| I[Categorize: Follower / Following / Ghost]
+    G -->|No| I[Categorize: Follower / Following / Non-reciprocal / Possible spam]
     H --> I
     I --> J[Resolve location per profile]
     J --> K[Render map + stats]
@@ -227,7 +231,7 @@ flowchart LR
 1. **Input** : You provide a GitHub username to map, and optionally your own PAT.
 2. **Route** : With a PAT, your browser talks to GitHub directly. Without one, the request goes through GitCharta's backend, which attaches a shared, rate-limited token : your own credentials are never part of this path, since you didn't provide any.
 3. **Fetch** : The GitHub GraphQL API is queried first, since it can pull followers, following, and profile fields in far fewer round trips than REST. Anything GraphQL leaves out is recovered with targeted REST calls.
-4. **Categorize** : Accounts are cross-referenced to identify followers, following, and non-reciprocal "ghosts."
+4. **Categorize** : Accounts are cross-referenced and heuristically screened to sort them into followers, following, non-reciprocal, and possible spam.
 5. **Resolve** : Each account's public location field is used to place it on the map; accounts without one land in the dedicated unlocated view instead of disappearing.
 6. **Render** : Results are plotted on an interactive, explorable world map, alongside the statistics panel.
 
@@ -237,16 +241,18 @@ flowchart LR
 
 Planned for upcoming releases:
 
-| Status | Feature                  | Description                                                             | Notes                            |
-| ------ | ------------------------ | ----------------------------------------------------------------------- | -------------------------------- |
-| ⬜     | **Map screenshots**      | Export your map as an image to share or drop into a README              |                                  |
-| ⬜     | **Zoom & pan**           | Get in close on any region instead of squinting at the whole world      |                                  |
-| ⬜     | **Stargazer maps**       | Map the people starring your repos, not just your followers             |                                  |
-| ⬜     | **GitHub profile badge** | Embed a live badge of your map straight into your GitHub profile README |                                  |
-| ⬜     | **Coverage badge**       | A badge showing what percentage of the world your audience covers       |                                  |
-| ⬜     | **Direct Unfollow**      | Unfollow "ghosts" straight from the map interface                       | Requires `user:follow` PAT scope |
-| ⬜     | **Advanced Color Modes** | Heatmap, radar view, and a "Contribution Green" theme                   |                                  |
-| ⬜     | **UI/UX Overhaul**       | Ongoing improvements to interface and user flow                         |                                  |
+| Status | Feature                   | Description                                                              | Notes                            |
+| ------ | ------------------------- | ------------------------------------------------------------------------ | -------------------------------- |
+| ⬜     | **Stargazer maps**        | Map the people starring your repos : reach beyond your social graph      |                                  |
+| ⬜     | **Fork maps**             | See where the people forking your projects are based                     |                                  |
+| ⬜     | **Contributor / PR maps** | Plot everyone who's opened a PR against your repos or org                |                                  |
+| ⬜     | **Map screenshots**       | Export your map as an image to share or drop into a README               |                                  |
+| ⬜     | **Zoom & pan**            | Get in close on any region instead of squinting at the whole world       |                                  |
+| ⬜     | **GitHub profile badge**  | Embed a live badge of your map straight into your GitHub profile README  |                                  |
+| ⬜     | **Coverage badge**        | A badge showing what percentage of the world your reach covers           |                                  |
+| ⬜     | **Direct Unfollow**       | Unfollow non-reciprocal or spam accounts straight from the map interface | Requires `user:follow` PAT scope |
+| ⬜     | **Advanced Color Modes**  | Heatmap, radar view, and a "Contribution Green" theme                    |                                  |
+| ⬜     | **UI/UX Overhaul**        | Ongoing improvements to interface and user flow                          |                                  |
 
 Have an idea? [Open an issue](../../issues) to suggest a feature.
 
@@ -277,11 +283,15 @@ Contributions are welcome! To get started:
 
 ---
 
-## 👤 Author & Contact
+## 👤 Get in Touch
 
-Built and maintained by **Thierry Rakotomanana**.
+Hey, I'm **Thierry Rakotomanana** : I built and maintain GitCharta. I'm actively looking to grow my own network with people building interesting things, so if this project is useful to you, resonates with you, or you just want to talk shop, don't be a stranger.
 
-If you find this project useful, consider following along : new tools and open-source contributions are shared regularly.
+- 💬 Open an [issue](../../issues) or [pull request](#-contributing) : the fastest way to reach me about the project itself
+- 🐙 Follow or connect on [GitHub @ThierryRakotomanana](https://github.com/ThierryRakotomanana)
+- 🐦 Say hi on [Twitter/X @ThieryRakt](https://twitter.com/ThieryRakt)
+
+If you find GitCharta useful, a follow, a star, or just a message goes a long way : and who knows, you might be the pin that puts a new country on my own map.
 
 [![GitHub](https://img.shields.io/badge/GitHub-ThierryRakotomanana-181717?style=for-the-badge&logo=github)](https://github.com/ThierryRakotomanana)
 

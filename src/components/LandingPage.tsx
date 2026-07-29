@@ -2,12 +2,17 @@ import {
 	ArrowRight,
 	BadgeCheck,
 	Camera,
+	Contact,
 	Ghost,
-	Globe,
-	List,
+	GitFork,
+	GitPullRequest,
 	Lock,
+	Mail,
 	Percent,
 	Star,
+	UserMinus,
+	UserPlus,
+	Users,
 	ZoomIn
 } from "lucide-react";
 import { GithubIcon } from "@/components/icons/lucide-github";
@@ -15,8 +20,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const PRODUCT_NAME = "GitCharta";
+const AUTHOR_NAME = "Thierry";
 
 const REPO_URL = "https://github.com/ThierryRakotomanana/Github-Audience-Atlas";
+const GITHUB_URL = "https://github.com/ThierryRakotomanana";
+const TWITTER_URL = "https://twitter.com/ThieryRakt";
+const LINKEDIN_URL = "https://mg.linkedin.com/in/thierry-rakotomanana";
 
 const EXAMPLE_PROFILE = {
 	login: "torvalds",
@@ -36,36 +45,56 @@ const STEPS = [
 		visual: ConnectVisual
 	},
 	{
-		title: "Fetch & locate",
-		body: "GitCharta pulls your followers and following, then works out their countries from their public profiles.",
+		title: "Fetch & sort",
+		body: "GitCharta pulls your followers and following, works out their countries, and sorts every account into one of four categories.",
 		visual: FetchVisual
 	},
 	{
 		title: "Explore",
-		body: "Browse the map, filter by country, and see who you follow that hasn't followed back.",
+		body: "Browse the map, filter by category or country, and see exactly how far your reach really goes.",
 		visual: ExploreVisual
 	}
 ] as const;
 
-const FEATURES = [
+const CATEGORIES = [
 	{
-		icon: Globe,
-		title: "World map",
-		body: "Every follower and account you follow, plotted by country on a simple heat scale."
+		icon: Users,
+		title: "Follower",
+		body: "Someone who follows you : part of your confirmed audience."
+	},
+	{
+		icon: UserPlus,
+		title: "Following",
+		body: "Someone you follow : the people and projects you learn from."
+	},
+	{
+		icon: UserMinus,
+		title: "Non-reciprocal",
+		body: "You follow them, they don't follow back. A real account, just a one-way relationship."
 	},
 	{
 		icon: Ghost,
-		title: "Ghost Zone",
-		body: "See exactly who you follow that hasn't followed you bac: no more guessing."
-	},
-	{
-		icon: List,
-		title: "Country breakdown",
-		body: "A searchable, ranked list of every country in your audience, with live percentages."
+		title: "Possible spam",
+		body: "Accounts that look automated or inactive : flagged and set aside so they don't inflate your reach."
 	}
 ] as const;
 
 const ROADMAP = [
+	{
+		icon: Star,
+		title: "Stargazer maps",
+		body: "See where the people starring your repos are based : reach beyond your social graph."
+	},
+	{
+		icon: GitFork,
+		title: "Fork maps",
+		body: "See where the people forking your projects are located."
+	},
+	{
+		icon: GitPullRequest,
+		title: "Contributor & PR maps",
+		body: "Plot everyone who's opened a PR against your repos or organization."
+	},
 	{
 		icon: Camera,
 		title: "Map screenshots",
@@ -77,11 +106,6 @@ const ROADMAP = [
 		body: "Get in close on any region instead of squinting at the whole world."
 	},
 	{
-		icon: Star,
-		title: "Stargazer maps",
-		body: "See where the people starring your repos are based, not just your followers."
-	},
-	{
 		icon: BadgeCheck,
 		title: "Profile badge",
 		body: "Embed a live badge of your map straight into your GitHub profile README."
@@ -89,7 +113,7 @@ const ROADMAP = [
 	{
 		icon: Percent,
 		title: "Coverage badge",
-		body: "A badge showing what percentage of the world your audience covers."
+		body: "A badge showing what percentage of the world your reach covers."
 	}
 ] as const;
 
@@ -157,7 +181,7 @@ function FetchVisual() {
 	const lines = [
 		"fetching followers…",
 		"resolving countries…",
-		"318 located · 6 pending"
+		"296 real · 22 non-reciprocal · 6 spam"
 	];
 	return (
 		<div
@@ -217,7 +241,7 @@ function ExploreVisual() {
 				))}
 			</svg>
 			<p className='mt-1 text-[9px] font-mono text-muted-foreground text-center'>
-				34 countries mapped
+				34 countries reached
 			</p>
 		</div>
 	);
@@ -250,25 +274,28 @@ export default function LandingPage({ onSubmit }: { onSubmit: () => void }) {
 					</a>
 				</header>
 
-				<section className='flex-1 flex items-center'>
+				<section className='flex-1 flex items-center overflow-hidden'>
 					<div className='max-w-6xl mx-auto w-full px-4 sm:px-6 py-10'>
-						<div className='grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center'>
-							<div>
+						<div className='grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center relative'>
+							<div className='relative z-10'>
+								<div className='hidden lg:block absolute -inset-y-8 -inset-x-8 z-[-1] bg-background/[0.85] backdrop-blur-md rounded-3xl' />
+
 								<p className='font-mono text-xs text-muted-foreground'>
-									<span className='text-foreground/70'>$</span> gitcharta --map{" "}
+									<span className='text-foreground/70'>$</span> gitcharta --reach{" "}
 									{EXAMPLE_PROFILE.login}
 								</p>
 								<h1 className='mt-3 text-3xl sm:text-4xl font-semibold tracking-tight leading-tight'>
-									Your GitHub audience, charted.
+									Every star, fork, and follow is a country you've reached.
 								</h1>
 								<p className='mt-4 text-base text-muted-foreground leading-relaxed max-w-md'>
-									{PRODUCT_NAME} fetches your followers and following, works out
-									where they're based, and plots them on a world map : including
-									everyone you follow who hasn't followed back.
+									Followers, stars, forks, PRs : GitHub gives you raw counts.{" "}
+									{PRODUCT_NAME} turns your whole footprint into a map, so you see
+									exactly how far your work travels : and someone on it might be the
+									first person from their country to reach you.
 								</p>
 								<div className='mt-7 flex flex-col sm:flex-row sm:items-center gap-3'>
 									<Button size='lg' onClick={onSubmit} className='gap-2'>
-										Map my followers
+										Map my reach
 										<ArrowRight className='h-4 w-4' />
 									</Button>
 									<Button
@@ -280,10 +307,25 @@ export default function LandingPage({ onSubmit }: { onSubmit: () => void }) {
 									</Button>
 								</div>
 							</div>
-
-							<div className='flex justify-center'>
-								<img src={"gitcharta.png"} alt='' />
-								<img className='w-full max-w-85' />
+							<div className='relative flex justify-center lg:justify-end z-0 pointer-events-none'>
+								<div
+									className='w-full lg:w-[160%] lg:-ml-[60%]'
+									style={{
+										WebkitMaskImage:
+											"radial-gradient(ellipse at right center, black 40%, transparent 100%)",
+										maskImage:
+											"radial-gradient(ellipse at right center, black 40%, transparent 100%)"
+									}}>
+									<div className='relative rounded-xl bg-background/50 p-2 ring-1 ring-border/50 shadow-2xl backdrop-blur-sm'>
+										<div className='overflow-hidden rounded-lg bg-muted shadow-sm'>
+											<img
+												src={"gitcharta.png"}
+												alt=''
+												className='w-full h-auto object-cover'
+											/>
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -326,9 +368,18 @@ export default function LandingPage({ onSubmit }: { onSubmit: () => void }) {
 
 			<div className='bg-muted/20'>
 				<section className='max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-24'>
-					<h2 className='text-xl font-semibold tracking-tight'>What you get</h2>
-					<div className='mt-8 grid grid-cols-1 md:grid-cols-3 gap-6'>
-						{FEATURES.map(({ icon: Icon, title, body }) => (
+					<div className='max-w-2xl'>
+						<h2 className='text-xl font-semibold tracking-tight'>
+							Not every connection is equal
+						</h2>
+						<p className='mt-2 text-sm text-muted-foreground leading-relaxed'>
+							GitCharta sorts every account into one of four categories, so a
+							genuine one-way follow never gets lumped in with a dead bot account
+							skewing your numbers.
+						</p>
+					</div>
+					<div className='mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6'>
+						{CATEGORIES.map(({ icon: Icon, title, body }) => (
 							<Card key={title} className='border-border'>
 								<CardContent className='p-5'>
 									<Icon className='h-5 w-5 text-muted-foreground' />
@@ -348,8 +399,14 @@ export default function LandingPage({ onSubmit }: { onSubmit: () => void }) {
 					id='whats-next'
 					className='max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-24 scroll-mt-6'>
 					<div className='flex items-baseline justify-between gap-4'>
-						<h2 className='text-xl font-semibold tracking-tight'>What's next</h2>
-						<span className='hidden sm:inline font-mono text-[11px] text-muted-foreground'>
+						<div>
+							<h2 className='text-xl font-semibold tracking-tight'>What's next</h2>
+							<p className='mt-2 text-sm text-muted-foreground leading-relaxed max-w-lg'>
+								Followers and following are just the start. Stars, forks, and PRs
+								all represent someone your work reached too.
+							</p>
+						</div>
+						<span className='hidden sm:inline shrink-0 font-mono text-[11px] text-muted-foreground'>
 							on the map, not yet shipped
 						</span>
 					</div>
@@ -370,6 +427,43 @@ export default function LandingPage({ onSubmit }: { onSubmit: () => void }) {
 								</p>
 							</div>
 						))}
+					</div>
+				</section>
+			</div>
+
+			<div className='bg-muted/20'>
+				<section
+					id='get-in-touch'
+					className='max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-24 scroll-mt-6'>
+					<div className='grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 items-center'>
+						<div>
+							<h2 className='text-xl font-semibold tracking-tight'>Get in touch</h2>
+							<p className='mt-2 text-sm text-muted-foreground leading-relaxed max-w-lg'>
+								Hey, I'm {AUTHOR_NAME} : I built {PRODUCT_NAME}. I'm actively
+								looking to grow my own network with people building interesting
+								things, so if this resonated with you, don't be a stranger.
+							</p>
+						</div>
+						<div className='flex flex-wrap gap-3'>
+							<Button asChild variant='outline' className='gap-2'>
+								<a href={GITHUB_URL} target='_blank' rel='noreferrer'>
+									<GithubIcon className='h-4 w-4' />
+									Follow on GitHub
+								</a>
+							</Button>
+							<Button asChild variant='outline' className='gap-2'>
+								<a href={TWITTER_URL} target='_blank' rel='noreferrer'>
+									<Mail className='h-4 w-4' />
+									Say hi on Twitter
+								</a>
+							</Button>
+							<Button asChild variant='outline' className='gap-2'>
+								<a href={LINKEDIN_URL} target='_blank' rel='noreferrer'>
+									<Contact className='h-4 w-4' />
+									Connect on Linkedin
+								</a>
+							</Button>
+						</div>
 					</div>
 				</section>
 			</div>
