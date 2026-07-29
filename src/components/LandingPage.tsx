@@ -272,22 +272,24 @@ export default function LandingPage({ onSubmit }: { onSubmit: () => void }) {
 					</a>
 				</header>
 
-				<section className='flex-1 flex items-center'>
+				<section className='flex-1 flex items-center overflow-hidden'>
 					<div className='max-w-6xl mx-auto w-full px-4 sm:px-6 py-10'>
-						<div className='grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center'>
-							<div>
+						<div className='grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center relative'>
+							<div className='relative z-10'>
+								<div className='hidden lg:block absolute -inset-y-8 -inset-x-8 z-[-1] bg-background/[0.85] backdrop-blur-md rounded-3xl' />
+
 								<p className='font-mono text-xs text-muted-foreground'>
 									<span className='text-foreground/70'>$</span> gitcharta --reach{" "}
 									{EXAMPLE_PROFILE.login}
 								</p>
 								<h1 className='mt-3 text-3xl sm:text-4xl font-semibold tracking-tight leading-tight'>
-									Every follower is a country you've reached.
+									Every star, fork, and follow is a country you've reached.
 								</h1>
 								<p className='mt-4 text-base text-muted-foreground leading-relaxed max-w-md'>
-									A follower count is just a number. {PRODUCT_NAME} turns your
-									followers, following, stars, and forks into a map : so you can see
-									exactly how far your work travels, not just how many people
-									clicked follow.
+									Followers, stars, forks, PRs : GitHub gives you raw counts.{" "}
+									{PRODUCT_NAME} turns your whole footprint into a map, so you see
+									exactly how far your work travels : and someone on it might be the
+									first person from their country to reach you.
 								</p>
 								<div className='mt-7 flex flex-col sm:flex-row sm:items-center gap-3'>
 									<Button size='lg' onClick={onSubmit} className='gap-2'>
@@ -303,10 +305,25 @@ export default function LandingPage({ onSubmit }: { onSubmit: () => void }) {
 									</Button>
 								</div>
 							</div>
-
-							<div className='flex justify-center'>
-								<img src={"gitcharta.png"} alt='' />
-								<img className='w-full max-w-85' />
+							<div className='relative flex justify-center lg:justify-end z-0 pointer-events-none'>
+								<div
+									className='w-full lg:w-[160%] lg:-ml-[60%]'
+									style={{
+										WebkitMaskImage:
+											"radial-gradient(ellipse at right center, black 40%, transparent 100%)",
+										maskImage:
+											"radial-gradient(ellipse at right center, black 40%, transparent 100%)"
+									}}>
+									<div className='relative rounded-xl bg-background/50 p-2 ring-1 ring-border/50 shadow-2xl backdrop-blur-sm'>
+										<div className='overflow-hidden rounded-lg bg-muted shadow-sm'>
+											<img
+												src={"gitcharta.png"}
+												alt=''
+												className='w-full h-auto object-cover'
+											/>
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
