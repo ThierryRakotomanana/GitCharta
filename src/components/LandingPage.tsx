@@ -2,6 +2,7 @@ import {
 	ArrowRight,
 	BadgeCheck,
 	Camera,
+	Contact,
 	Ghost,
 	GitFork,
 	GitPullRequest,
@@ -24,6 +25,7 @@ const AUTHOR_NAME = "Thierry";
 const REPO_URL = "https://github.com/ThierryRakotomanana/Github-Audience-Atlas";
 const GITHUB_URL = "https://github.com/ThierryRakotomanana";
 const TWITTER_URL = "https://twitter.com/ThieryRakt";
+const LINKEDIN_URL = "https://mg.linkedin.com/in/thierry-rakotomanana";
 
 const EXAMPLE_PROFILE = {
 	login: "torvalds",
@@ -453,6 +455,12 @@ export default function LandingPage({ onSubmit }: { onSubmit: () => void }) {
 								<a href={TWITTER_URL} target='_blank' rel='noreferrer'>
 									<Mail className='h-4 w-4' />
 									Say hi on Twitter
+								</a>
+							</Button>
+							<Button asChild variant='outline' className='gap-2'>
+								<a href={LINKEDIN_URL} target='_blank' rel='noreferrer'>
+									<Contact className='h-4 w-4' />
+									Connect on Linkedin
 								</a>
 							</Button>
 						</div>
