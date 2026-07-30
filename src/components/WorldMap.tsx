@@ -1,30 +1,13 @@
-import { useMemo } from "react";
 import type { LocalizedGithubProfile } from "@/api/graphql.types";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
-import { geoNaturalEarth1, geoPath } from "d3-geo";
-import { scaleLog } from "d3-scale";
-import type { Geometry } from "geojson";
 import { Button } from "@/components/ui/button";
 import { Camera, Check } from "lucide-react";
 import { useMapStats } from "@/hooks/useMapStats";
 import { useMapSnapshot } from "@/hooks/useMapSnapshot";
-
-interface GeoProperties {
-	NAME_EN: string;
-	ISO_A2_EH: string;
-}
-
-interface CountryFeature {
-	type: "Feature";
-	properties: GeoProperties;
-	geometry: Geometry;
-}
-
-interface WorldGeoJson {
-	type: "FeatureCollection";
-	features: CountryFeature[];
-}
+import { useCountryPaths, type WorldGeoJson } from "@/hooks/useCountryPaths";
+import { useHeatScale } from "@/hooks/useHeatScale";
+import { useProfilesByCountry } from "@/hooks/useProfilesByCountry";
 
 export interface WorldMapProps {
 	width: number;
@@ -51,46 +34,9 @@ export const WorldMap = ({
 		retry: setReloadKey
 	} = useGeoJson<WorldGeoJson>(url);
 
-	const projection = useMemo(() => {
-		return geoNaturalEarth1().fitSize([width, height], { type: "Sphere" });
-	}, [width, height]);
-
-	const pathGenerator = useMemo(() => {
-		return geoPath().projection(projection);
-	}, [projection]);
-
-	const mapPaths = useMemo(() => {
-		if (!geoJson) return [];
-
-		return geoJson.features.map((feature) => {
-			return {
-				id: feature.properties.ISO_A2_EH,
-				name: feature.properties.NAME_EN,
-				svgPath: pathGenerator(feature) || ""
-			};
-		});
-	}, [geoJson, pathGenerator]);
-
-	const profilesByCountry = useMemo(() => {
-		return audience.reduce((acc, profile) => {
-			const regionalProfiles = acc.get(profile.country) ?? [];
-			regionalProfiles.push(profile);
-			return acc.set(profile.country, regionalProfiles);
-		}, new Map<string, LocalizedGithubProfile[]>());
-	}, [audience]);
-
-	const maxCount = useMemo(
-		() =>
-			Math.max(0, ...Array.from(profilesByCountry.values()).map((p) => p.length)),
-		[profilesByCountry]
-	);
-	const heatScale = useMemo(() => {
-		const domainMax = Math.max(1, maxCount);
-		return scaleLog()
-			.domain([1, domainMax + 1])
-			.range([0.22, 0.95])
-			.clamp(true);
-	}, [maxCount]);
+	const { mapPaths, spherePath } = useCountryPaths(geoJson, width, height);
+	const profilesByCountry = useProfilesByCountry(audience);
+	const heatScale = useHeatScale(profilesByCountry);
 
 	const stats = useMapStats(audience, profilesByCountry);
 	const { svgRef, handleExport, isExporting, justExported } = useMapSnapshot({
@@ -150,10 +96,7 @@ export const WorldMap = ({
 					</filter>
 				</defs>
 				<g>
-					<path
-						d={pathGenerator({ type: "Sphere" }) as string}
-						fill='var(--map-water)'
-					/>
+					<path d={spherePath} fill='var(--map-water)' />
 				</g>
 				<g>
 					{mapPaths.map((country) => {
