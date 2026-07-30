@@ -1,13 +1,14 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import type { LocalizedGithubProfile } from "@/api/graphql.types";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
-import { getRegionName, UNKNOWN_REGION } from "@/lib/region";
 import { geoNaturalEarth1, geoPath } from "d3-geo";
 import { scaleLog } from "d3-scale";
 import type { Geometry } from "geojson";
 import { Button } from "@/components/ui/button";
 import { Camera, Check } from "lucide-react";
+import { useMapStats } from "@/hooks/useMapStats";
+import { useMapSnapshot } from "@/hooks/useMapSnapshot";
 
 interface GeoProperties {
 	NAME_EN: string;
@@ -33,56 +34,6 @@ export interface WorldMapProps {
 	selectedCountry?: string | null;
 }
 
-function drawStatsCard(
-	ctx: CanvasRenderingContext2D,
-	viewportHeight: number,
-	stats: {
-		coveragePct: number;
-		unlocatedPct: number;
-		topCountryName: string;
-		topCountryPct: number;
-		cardBg: string;
-		border: string;
-		foreground: string;
-		muted: string;
-	}
-) {
-	const pad = 14;
-	const cardW = 200;
-	const cardH = 92;
-	const x = pad;
-	const y = viewportHeight - cardH - pad;
-	const radius = 10;
-
-	ctx.save();
-	ctx.beginPath();
-	ctx.moveTo(x + radius, y);
-	ctx.arcTo(x + cardW, y, x + cardW, y + cardH, radius);
-	ctx.arcTo(x + cardW, y + cardH, x, y + cardH, radius);
-	ctx.arcTo(x, y + cardH, x, y, radius);
-	ctx.arcTo(x, y, x + cardW, y, radius);
-	ctx.closePath();
-	ctx.fillStyle = stats.cardBg;
-	ctx.fill();
-	ctx.strokeStyle = stats.border;
-	ctx.lineWidth = 1;
-	ctx.stroke();
-
-	ctx.fillStyle = stats.foreground;
-	ctx.font = "600 12px system-ui, -apple-system, sans-serif";
-	ctx.fillText(
-		`Top: ${stats.topCountryName} (${stats.topCountryPct}%)`,
-		x + 14,
-		y + 26
-	);
-
-	ctx.fillStyle = stats.muted;
-	ctx.font = "500 11px system-ui, -apple-system, sans-serif";
-	ctx.fillText(`${stats.coveragePct}% of audience located`, x + 14, y + 50);
-	ctx.fillText(`${stats.unlocatedPct}% without a public location`, x + 14, y + 70);
-	ctx.restore();
-}
-
 export const WorldMap = ({
 	width,
 	height,
@@ -99,10 +50,6 @@ export const WorldMap = ({
 		error: loadError,
 		retry: setReloadKey
 	} = useGeoJson<WorldGeoJson>(url);
-
-	const svgRef = useRef<SVGSVGElement>(null);
-	const [isExporting, setIsExporting] = useState(false);
-	const [justExported, setJustExported] = useState(false);
 
 	const projection = useMemo(() => {
 		return geoNaturalEarth1().fitSize([width, height], { type: "Sphere" });
@@ -145,99 +92,12 @@ export const WorldMap = ({
 			.clamp(true);
 	}, [maxCount]);
 
-	const mapStats = useMemo(() => {
-		const total = audience.length;
-		const unknownCount = profilesByCountry.get(UNKNOWN_REGION)?.length ?? 0;
-		const locatedCount = total - unknownCount;
-
-		let topCountry: { code: string; count: number } | null = null;
-		for (const [code, profiles] of profilesByCountry) {
-			if (code === UNKNOWN_REGION) continue;
-			if (!topCountry || profiles.length > topCountry.count) {
-				topCountry = { code, count: profiles.length };
-			}
-		}
-
-		return {
-			coveragePct: total > 0 ? Math.round((locatedCount / total) * 100) : 0,
-			unlocatedPct: total > 0 ? Math.round((unknownCount / total) * 100) : 0,
-			topCountryName: topCountry ? getRegionName(topCountry.code) : "—",
-			topCountryPct:
-				topCountry && total > 0 ? Math.round((topCountry.count / total) * 100) : 0
-		};
-	}, [audience, profilesByCountry]);
-
-	const resolveCssVar = useCallback((name: string, fallback: string): string => {
-		if (typeof window === "undefined") return fallback;
-		const value = getComputedStyle(document.documentElement)
-			.getPropertyValue(name)
-			.trim();
-		return value || fallback;
-	}, []);
-
-	const handleExport = useCallback(async () => {
-		if (!svgRef.current) return;
-		setIsExporting(true);
-		try {
-			const clone = svgRef.current.cloneNode(true) as SVGSVGElement;
-
-			let markup = new XMLSerializer().serializeToString(clone);
-			markup = markup.replace(/var\((--[\w-]+)\)/g, (_, name: string) =>
-				resolveCssVar(name, "#94a3b8")
-			);
-
-			const svgBlob = new Blob([markup], { type: "image/svg+xml;charset=utf-8" });
-			const svgUrl = URL.createObjectURL(svgBlob);
-
-			const image = new Image();
-			const loaded = new Promise<void>((resolve, reject) => {
-				image.onload = () => resolve();
-				image.onerror = () => reject(new Error("Could not render the map image."));
-			});
-			image.src = svgUrl;
-			await loaded;
-
-			const dpr = Math.min(window.devicePixelRatio || 1, 3);
-			const canvas = document.createElement("canvas");
-			canvas.width = width * dpr;
-			canvas.height = height * dpr;
-			const ctx = canvas.getContext("2d");
-			if (!ctx) throw new Error("Canvas isn't supported here.");
-			ctx.scale(dpr, dpr);
-
-			ctx.fillStyle = resolveCssVar("--background", "#ffffff");
-			ctx.fillRect(0, 0, width, height);
-			ctx.drawImage(image, 0, 0, width, height);
-			URL.revokeObjectURL(svgUrl);
-
-			drawStatsCard(ctx, height, {
-				coveragePct: mapStats.coveragePct,
-				unlocatedPct: mapStats.unlocatedPct,
-				topCountryName: mapStats.topCountryName,
-				topCountryPct: mapStats.topCountryPct,
-				cardBg: resolveCssVar("--card", "#ffffff"),
-				border: resolveCssVar("--border", "#e2e8f0"),
-				foreground: resolveCssVar("--card-foreground", "#0f172a"),
-				muted: resolveCssVar("--muted-foreground", "#64748b")
-			});
-
-			canvas.toBlob((blob) => {
-				if (!blob) return;
-				const blobUrl = URL.createObjectURL(blob);
-				const link = document.createElement("a");
-				link.href = blobUrl;
-				link.download = "audience-atlas.png";
-				link.click();
-				URL.revokeObjectURL(blobUrl);
-				setJustExported(true);
-				setTimeout(() => setJustExported(false), 1800);
-			}, "image/png");
-		} catch {
-			setIsExporting(false);
-			return;
-		}
-		setIsExporting(false);
-	}, [width, height, mapStats, resolveCssVar]);
+	const stats = useMapStats(audience, profilesByCountry);
+	const { svgRef, handleExport, isExporting, justExported } = useMapSnapshot({
+		width,
+		height,
+		stats
+	});
 
 	if (loadError) {
 		return (
