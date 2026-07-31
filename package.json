@@ -40,6 +40,7 @@
 		"clsx": "^2.1.1",
 		"country-flag-icons": "^1.6.20",
 		"d3": "^7.9.0",
+		"html-to-image": "^1.11.13",
 		"lucide-react": "^1.16.0",
 		"radix-ui": "^1.4.3",
 		"react": "^19.2.5",
