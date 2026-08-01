@@ -2,19 +2,26 @@ import type { LocalizedGithubProfile } from "@/api/graphql.types";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
 import { Button } from "@/components/ui/button";
-import { Camera, Check } from "lucide-react";
+import { Camera, Check, X } from "lucide-react";
 import { useMapStats } from "@/hooks/useMapStats";
 import { useMapSnapshot } from "@/hooks/useMapSnapshot";
 import { useCountryPaths, type WorldGeoJson } from "@/hooks/useCountryPaths";
 import { useHeatScale } from "@/hooks/useHeatScale";
 import { useProfilesByCountry } from "@/hooks/useProfilesByCountry";
+import { getRegionName } from "@/lib/region";
+import { useMemo } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
 
 export interface WorldMapProps {
 	width: number;
 	height: number;
-	setCountry: (country: string) => void;
+	setCountry: (country: string | null) => void;
 	audience: LocalizedGithubProfile[];
 	selectedCountry?: string | null;
+	username?: string;
+	avatarUrl?: string;
+	mapTypeLabel?: string;
 }
 
 export const WorldMap = ({
@@ -22,7 +29,10 @@ export const WorldMap = ({
 	height,
 	setCountry,
 	audience,
-	selectedCountry = null
+	selectedCountry = null,
+	username = "Developer",
+	avatarUrl,
+	mapTypeLabel = "Network"
 }: WorldMapProps) => {
 	const url =
 		"https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson";
@@ -39,11 +49,29 @@ export const WorldMap = ({
 	const heatScale = useHeatScale(profilesByCountry);
 
 	const stats = useMapStats(audience, profilesByCountry);
-	const { svgRef, handleExport, isExporting, justExported } = useMapSnapshot({
-		width,
-		height,
-		stats
+	const safeFilename = `${username.toLowerCase()}-${mapTypeLabel.toLowerCase().replace(/\s+/g, "-")}-map.png`;
+
+	const { exportRef, handleExport, isExporting, justExported } = useMapSnapshot({
+		fileName: safeFilename
 	});
+
+	const selectedCountryStats = useMemo(() => {
+		if (!selectedCountry) return null;
+
+		const profiles = profilesByCountry.get(selectedCountry) ?? [];
+		const count = profiles.length;
+		const totalAudience = audience.length;
+		const pctOfTotal =
+			totalAudience > 0 ? Math.round((count / totalAudience) * 100) : 0;
+
+		return {
+			id: selectedCountry,
+			name: getRegionName(selectedCountry),
+			count,
+			pctOfTotal,
+			topProfiles: profiles.slice(0, 3)
+		};
+	}, [selectedCountry, profilesByCountry, audience.length]);
 
 	if (loadError) {
 		return (
@@ -72,8 +100,14 @@ export const WorldMap = ({
 	}
 
 	return (
-		<div className='relative' style={{ width, height }}>
-			<svg ref={svgRef} width={width} height={height} className='bg-(--map-space)'>
+		<div
+			ref={exportRef}
+			className='relative overflow-hidden'
+			style={{ width, height }}>
+			<svg
+				width={width}
+				height={height}
+				className='absolute inset-0 bg-(--map-space)'>
 				<defs>
 					<filter id='map-glow' x='-60%' y='-60%' width='220%' height='220%'>
 						<feGaussianBlur stdDeviation='6' result='blur' />
@@ -114,27 +148,101 @@ export const WorldMap = ({
 										`hsl(var(--signal) / ${heatScale(count).toFixed(2)})`
 									:	MAP_BASE_STYLING.defaultFill
 								}
-								className={`transition-colors duration-300 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none focus-visible:stroke-[2.5px] focus-visible:stroke-ring ${
+								className={`transition-colors duration-300 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none ${
 									isSelected ? "stroke-[2px] stroke-primary" : "stroke-[0.05px]"
 								}`}
-								tabIndex={0}
-								role='button'
-								aria-pressed={isSelected}
-								aria-label={`${country.name}, ${hasData ? `${count} follower${count > 1 ? "s" : ""}` : "no followers"}`}
-								onClick={() => setCountry(country.id)}
-								onKeyDown={(e) => {
-									if (e.key === "Enter" || e.key === " ") {
-										e.preventDefault();
-										setCountry(country.id);
-									}
-								}}
+								onClick={() => setCountry(isSelected ? null : country.id)}
 							/>
 						);
 					})}
 				</g>
 			</svg>
 
-			<div className='absolute top-3 right-3 z-10'>
+			<div className='absolute bottom-3 left-3 sm:bottom-6 sm:left-6 z-10 pointer-events-none'>
+				<Card className='flex flex-col gap-2 p-3.5 bg-card/85 backdrop-blur-md border-border/50 shadow-lg min-w-55 pointer-events-auto transition-all duration-200'>
+					{selectedCountryStats ?
+						<div>
+							<div className='flex items-center justify-between gap-2 mb-1'>
+								<span className='text-[10px] font-bold uppercase tracking-wider text-primary'>
+									Region Overview
+								</span>
+								<button
+									onClick={() => setCountry(null)}
+									className='text-muted-foreground hover:text-foreground rounded-sm p-0.5'>
+									<X className='h-3.5 w-3.5' />
+								</button>
+							</div>
+							<div className='text-sm font-bold text-foreground'>
+								{selectedCountryStats.name}
+							</div>
+							<div className='mt-1 flex items-baseline gap-1.5'>
+								<span className='text-xl font-extrabold text-foreground'>
+									{selectedCountryStats.count}
+								</span>
+								<span className='text-xs text-muted-foreground'>
+									person{selectedCountryStats.count !== 1 ? "s" : ""} (
+									{selectedCountryStats.pctOfTotal}%)
+								</span>
+							</div>
+							{selectedCountryStats.topProfiles.length > 0 && (
+								<div className='mt-2.5 pt-2 border-t border-border/40 flex items-center gap-1.5'>
+									<span className='text-[10px] text-muted-foreground'>
+										Network:
+									</span>
+									<div className='flex -space-x-1.5 overflow-hidden'>
+										{selectedCountryStats.topProfiles.map((profile) => (
+											<Avatar
+												key={profile.id}
+												className='inline-block h-5 w-5 rounded-full ring-1 ring-background'>
+												<AvatarImage
+													src={profile.avatarUrl}
+													crossOrigin='anonymous'
+												/>
+												<AvatarFallback className='text-[8px]'>
+													{profile.login.slice(0, 2).toUpperCase()}
+												</AvatarFallback>
+											</Avatar>
+										))}
+									</div>
+								</div>
+							)}
+						</div>
+					:	<div>
+							<div className='text-[10px] font-bold uppercase tracking-wider text-primary mb-1'>
+								Global Footprint
+							</div>
+							<div>
+								<div className='text-sm font-semibold text-foreground'>
+									Top: {stats.topCountryName}
+								</div>
+								<div className='text-xs text-muted-foreground'>
+									{stats.topCountryPct}% of total audience
+								</div>
+							</div>
+							<div className='h-px bg-border/50 w-full my-2' />
+							<div className='text-xs font-medium text-foreground'>
+								{stats.coveragePct}% mapped location
+							</div>
+						</div>
+					}
+				</Card>
+			</div>
+			<div className='absolute top-3 left-3 sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 z-10 flex items-center gap-3  pointer-events-none p-3.5 bg-card/85 backdrop-blur-md border-border/50  rounded-md'>
+				<Avatar className='h-10 w-10 border-2 border-primary/20 shadow-sm bg-card'>
+					<AvatarImage src={avatarUrl} crossOrigin='anonymous' />
+					<AvatarFallback>{username.substring(0, 2).toUpperCase()}</AvatarFallback>
+				</Avatar>
+				<div className='flex flex-col px-2 py-0.5 rounded-md'>
+					<h2 className='text-[10px] font-bold uppercase tracking-wider text-primary'>
+						{username}'s {mapTypeLabel}
+					</h2>
+					<p className='text-xs font-medium text-muted-foreground'>
+						Global Footprint
+					</p>
+				</div>
+			</div>
+
+			<div className='absolute top-4 sm:top-6 right-4 sm:right-6 z-20 exclude-from-export'>
 				<Button
 					type='button'
 					size='icon'
@@ -142,7 +250,6 @@ export const WorldMap = ({
 					onClick={handleExport}
 					disabled={isExporting}
 					title='Save snapshot'
-					aria-label='Save a snapshot of this map with audience stats'
 					className='h-10 w-10 sm:h-9 sm:w-9 bg-card border border-border shadow-sm'>
 					{justExported ?
 						<Check className='h-4 w-4 text-primary' />

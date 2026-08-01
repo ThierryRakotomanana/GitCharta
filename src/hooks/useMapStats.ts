@@ -1,9 +1,13 @@
 import { useMemo } from "react";
 import { getRegionName, UNKNOWN_REGION } from "@/lib/region";
 import type { LocalizedGithubProfile } from "@/api/graphql.types";
-import type { MapStatsCardData } from "@/lib/drawMapStatsCard";
 
-export type MapStats = MapStatsCardData;
+export type MapStats = {
+	coveragePct: number;
+	unlocatedPct: number;
+	topCountryName: string;
+	topCountryPct: number;
+};
 
 export function useMapStats(
 	audience: LocalizedGithubProfile[],
