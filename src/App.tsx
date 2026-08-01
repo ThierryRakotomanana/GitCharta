@@ -261,6 +261,12 @@ export default function App() {
 										setCountry={setCountry}
 										audience={currentAudience}
 										selectedCountry={country}
+										username={user?.name ?? "User"}
+										avatarUrl={user?.avatarUrl}
+										mapTypeLabel={
+											AUDIENCE_TABS.find((t) => t.value === audienceType)?.label
+											|| "Network"
+										}
 									/>
 								:	<div className='absolute inset-0 flex items-center justify-center gap-2 text-sm text-muted-foreground'>
 										<Loader2 className='h-4 w-4 animate-spin' />
