@@ -158,7 +158,7 @@ export const WorldMap = ({
 				</g>
 			</svg>
 
-			<div className='absolute bottom-6 left-6 z-10 pointer-events-none'>
+			<div className='absolute bottom-3 left-3 sm:bottom-6 sm:left-6 z-10 pointer-events-none'>
 				<Card className='flex flex-col gap-2 p-3.5 bg-card/85 backdrop-blur-md border-border/50 shadow-lg min-w-55 pointer-events-auto transition-all duration-200'>
 					{selectedCountryStats ?
 						<div>
@@ -227,7 +227,7 @@ export const WorldMap = ({
 					}
 				</Card>
 			</div>
-			<div className='absolute bottom-6 right-6 z-10 flex items-center gap-3  pointer-events-none p-3.5 bg-card/85 backdrop-blur-md border-border/50  rounded-md'>
+			<div className='absolute top-3 left-3 sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 z-10 flex items-center gap-3  pointer-events-none p-3.5 bg-card/85 backdrop-blur-md border-border/50  rounded-md'>
 				<Avatar className='h-10 w-10 border-2 border-primary/20 shadow-sm bg-card'>
 					<AvatarImage src={avatarUrl} crossOrigin='anonymous' />
 					<AvatarFallback>{username.substring(0, 2).toUpperCase()}</AvatarFallback>
@@ -242,7 +242,7 @@ export const WorldMap = ({
 				</div>
 			</div>
 
-			<div className='absolute top-6 right-6 z-20 exclude-from-export'>
+			<div className='absolute top-4 sm:top-6 right-4 sm:right-6 z-20 exclude-from-export'>
 				<Button
 					type='button'
 					size='icon'
