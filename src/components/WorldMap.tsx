@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import type { LocalizedGithubProfile } from "@/api/graphql.types";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
-import { geoCentroid, geoOrthographic, geoPath } from "d3-geo";
+import { geoOrthographic, geoPath } from "d3-geo";
 import { Button } from "@/components/ui/button";
 import { Camera, Check, X } from "lucide-react";
 import { useMapStats } from "@/hooks/useMapStats";
@@ -14,6 +14,7 @@ import { getRegionName } from "@/lib/region";
 import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { useGlobeRotation } from "@/hooks/useGlobalRotation";
 
 export interface WorldMapProps {
 	width: number;
@@ -51,108 +52,10 @@ export const WorldMap = ({
 	const heatScale = useHeatScale(profilesByCountry);
 	const svgRef = useRef<SVGSVGElement>(null);
 
-	const [rotation, setRotation] = useState<[number, number, number]>([0, 0, 0]);
-	const currentRotationRef = useRef(rotation);
-	const [isDragging, setIsDragging] = useState(false);
-	const dragStartRef = useRef<{
-		x: number;
-		y: number;
-		rotation: [number, number, number];
-	} | null>(null);
-	const animationRef = useRef<number | null>(null);
-
-	useEffect(() => {
-		currentRotationRef.current = rotation;
-	}, [rotation]);
-
-	const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
-		if (animationRef.current) cancelAnimationFrame(animationRef.current);
-		setIsDragging(true);
-		const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-		const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-		dragStartRef.current = {
-			x: clientX,
-			y: clientY,
-			rotation: currentRotationRef.current
-		};
-	};
-
-	const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
-		if (!isDragging || !dragStartRef.current) return;
-
-		const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-		const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-
-		const dx = clientX - dragStartRef.current.x;
-		const dy = clientY - dragStartRef.current.y;
-
-		const sensitivity = 0.5;
-
-		const newRotation: [number, number, number] = [
-			dragStartRef.current.rotation[0] + dx * sensitivity,
-			dragStartRef.current.rotation[1] - dy * sensitivity,
-			0
-		];
-
-		newRotation[1] = Math.max(-90, Math.min(90, newRotation[1]));
-
-		setRotation(newRotation);
-	};
-
-	const handlePointerUp = () => {
-		setIsDragging(false);
-		dragStartRef.current = null;
-	};
-
-	useEffect(() => {
-		if (!selectedCountry || !geoJson) return;
-
-		const feature = geoJson.features.find(
-			(f) => f.properties.ISO_A2_EH === selectedCountry
-		);
-		if (!feature) return;
-
-		const centroid = geoCentroid(feature);
-
-		const targetRotation: [number, number, number] = [
-			-centroid[0],
-			-centroid[1],
-			0
-		];
-		const startRotation = currentRotationRef.current;
-
-		let dLambda = targetRotation[0] - startRotation[0];
-		dLambda = dLambda % 360;
-		if (dLambda < -180) dLambda += 360;
-		if (dLambda > 180) dLambda -= 360;
-
-		const startTime = performance.now();
-		const duration = 750; // ms
-
-		const animate = (time: number) => {
-			const elapsed = time - startTime;
-			const progress = Math.min(elapsed / duration, 1);
-
-			const ease = 1 - Math.pow(1 - progress, 3);
-
-			setRotation([
-				startRotation[0] + dLambda * ease,
-				startRotation[1] + (targetRotation[1] - startRotation[1]) * ease,
-				0
-			]);
-
-			if (progress < 1) {
-				animationRef.current = requestAnimationFrame(animate);
-			}
-		};
-
-		if (animationRef.current) cancelAnimationFrame(animationRef.current);
-		animationRef.current = requestAnimationFrame(animate);
-
-		return () => {
-			if (animationRef.current) cancelAnimationFrame(animationRef.current);
-		};
-	}, [selectedCountry, geoJson]);
+	const { rotation, isDragging, dragHandlers } = useGlobeRotation(
+		selectedCountry,
+		geoJson
+	);
 
 	const projection = useMemo(() => {
 		return geoOrthographic()
@@ -237,13 +140,7 @@ export const WorldMap = ({
 				width={width}
 				height={height}
 				className={`bg-(--map-space) ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
-				onMouseDown={handlePointerDown}
-				onMouseMove={handlePointerMove}
-				onMouseUp={handlePointerUp}
-				onMouseLeave={handlePointerUp}
-				onTouchStart={handlePointerDown}
-				onTouchMove={handlePointerMove}
-				onTouchEnd={handlePointerUp}>
+				{...dragHandlers}>
 				<defs>
 					<filter id='map-glow' x='-60%' y='-60%' width='220%' height='220%'>
 						<feGaussianBlur stdDeviation='6' result='blur' />
