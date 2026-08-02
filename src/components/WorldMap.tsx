@@ -2,7 +2,6 @@ import { useRef } from "react";
 import type { LocalizedGithubProfile } from "@/api/graphql.types";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
-import { geoOrthographic, geoPath } from "d3-geo";
 import { Button } from "@/components/ui/button";
 import { Camera, Check, X } from "lucide-react";
 import { useMapStats } from "@/hooks/useMapStats";
@@ -15,6 +14,7 @@ import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { useGlobeRotation } from "@/hooks/useGlobalRotation";
+import type { MAP_MODE } from "@/App";
 
 export interface WorldMapProps {
 	width: number;
@@ -25,6 +25,7 @@ export interface WorldMapProps {
 	username?: string;
 	avatarUrl?: string;
 	mapTypeLabel?: string;
+	mapMode: MAP_MODE;
 }
 
 export const WorldMap = ({
@@ -35,7 +36,8 @@ export const WorldMap = ({
 	selectedCountry = null,
 	username = "Developer",
 	avatarUrl,
-	mapTypeLabel = "Network"
+	mapTypeLabel = "Network",
+	mapMode
 }: WorldMapProps) => {
 	const url =
 		"https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson";
@@ -47,7 +49,6 @@ export const WorldMap = ({
 		retry: setReloadKey
 	} = useGeoJson<WorldGeoJson>(url);
 
-	const { spherePath } = useCountryPaths(geoJson, width, height);
 	const profilesByCountry = useProfilesByCountry(audience);
 	const heatScale = useHeatScale(profilesByCountry);
 	const svgRef = useRef<SVGSVGElement>(null);
@@ -57,27 +58,13 @@ export const WorldMap = ({
 		geoJson
 	);
 
-	const projection = useMemo(() => {
-		return geoOrthographic()
-			.fitSize([width, height], { type: "Sphere" })
-			.rotate(rotation);
-	}, [width, height, rotation]);
-
-	const pathGenerator = useMemo(() => {
-		return geoPath().projection(projection);
-	}, [projection]);
-
-	const mapPaths = useMemo(() => {
-		if (!geoJson) return [];
-
-		return geoJson.features.map((feature) => {
-			return {
-				id: feature.properties.ISO_A2_EH,
-				name: feature.properties.NAME_EN,
-				svgPath: pathGenerator(feature) || ""
-			};
-		});
-	}, [geoJson, pathGenerator]);
+	const { mapPaths, spherePath } = useCountryPaths(
+		geoJson,
+		width,
+		height,
+		rotation,
+		mapMode
+	);
 
 	const stats = useMapStats(audience, profilesByCountry);
 	const safeFilename = `${username.toLowerCase()}-${mapTypeLabel.toLowerCase().replace(/\s+/g, "-")}-map.png`;
@@ -162,9 +149,12 @@ export const WorldMap = ({
 						</feMerge>
 					</filter>
 				</defs>
-				<g>
-					<path d={spherePath} fill='var(--map-water)' />
-				</g>
+
+				{mapMode == "SPHERE" && (
+					<g>
+						<path d={spherePath} fill='var(--map-water)' />
+					</g>
+				)}
 				<g>
 					{mapPaths.map((country) => {
 						const count = profilesByCountry.get(country.id)?.length ?? 0;

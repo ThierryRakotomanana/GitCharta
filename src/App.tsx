@@ -35,22 +35,32 @@ const AUDIENCE_TABS: { value: AudienceType; label: string; noun: string }[] = [
 	{ value: "ghosts", label: "Ghost Zone", noun: "ghost" }
 ];
 
+export type MAP_MODE = "GLODE" | "SPHERE";
+
+const MODE_TABS: { value: MAP_MODE; label: string }[] = [
+	{ value: "SPHERE", label: "2D" },
+	{ value: "GLODE", label: "3D" }
+];
+
 type AppState = {
 	country: string | null;
 	audienceType: AudienceType;
 	credentials: Credentials;
+	mapMode: MAP_MODE;
 };
 
 type AppAction =
 	| { type: "SET_COUNTRY"; payload: string | null }
 	| { type: "SET_AUDIENCE_TYPE"; payload: AudienceType }
 	| { type: "SET_CREDENTIALS"; payload: Credentials }
-	| { type: "RESET_USER" };
+	| { type: "RESET_USER" }
+	| { type: "SET_MODE"; payload: MAP_MODE };
 
 const initialState: AppState = {
 	country: null,
 	audienceType: "followers",
-	credentials: { user: "", token: "" }
+	credentials: { user: "", token: "" },
+	mapMode: "SPHERE"
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -61,6 +71,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
 			return { ...state, audienceType: action.payload, country: null };
 		case "SET_CREDENTIALS":
 			return { ...state, credentials: action.payload };
+		case "SET_MODE":
+			return { ...state, mapMode: action.payload };
 		case "RESET_USER":
 			return initialState;
 		default:
@@ -69,7 +81,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 }
 
 export default function App() {
-	const [{ country, audienceType, credentials }, dispatch] = useReducer(
+	const [{ country, audienceType, credentials, mapMode }, dispatch] = useReducer(
 		appReducer,
 		initialState
 	);
@@ -135,6 +147,24 @@ export default function App() {
 								</a>
 							</div>
 						</div>
+						{status == "success" && (
+							<Tabs
+								value={mapMode}
+								onValueChange={(v) =>
+									dispatch({
+										type: "SET_MODE",
+										payload: v as MAP_MODE
+									})
+								}>
+								<TabsList className='bg-muted'>
+									{MODE_TABS.map((tab) => (
+										<TabsTrigger key={tab.value} value={tab.value}>
+											{tab.label}
+										</TabsTrigger>
+									))}
+								</TabsList>
+							</Tabs>
+						)}
 
 						<div className='flex items-center gap-3 sm:gap-4 shrink-0'>
 							{!isMobile && (
@@ -256,6 +286,7 @@ export default function App() {
 								className='flex-1 relative overflow-hidden'>
 								{size ?
 									<WorldMap
+										mapMode={mapMode}
 										width={size.width}
 										height={size.height}
 										setCountry={setCountry}
