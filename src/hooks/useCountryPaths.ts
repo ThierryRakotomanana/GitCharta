@@ -1,8 +1,11 @@
+// src/hooks/useCountryPaths.ts
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+	geoCentroid,
 	geoNaturalEarth1,
 	geoOrthographic,
 	geoPath,
+	geoRotation,
 	geoTransform,
 	type GeoStream
 } from "d3-geo";
@@ -29,6 +32,12 @@ export interface CountryPath {
 	id: string;
 	name: string;
 	svgPath: string;
+	opacity: number;
+}
+
+function smoothstep(edge0: number, edge1: number, x: number) {
+	const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+	return t * t * (3 - 2 * t);
 }
 
 export function useCountryPaths(
@@ -103,9 +112,6 @@ export function useCountryPaths(
 	);
 
 	const pathGenerator = useMemo(() => {
-		if (progress === 0) return geoPath().projection(p2d);
-		if (progress === 1) return geoPath().projection(p3d);
-
 		const interpolatingProjection = geoTransform({
 			point: function (this: { stream: GeoStream }, lon: number, lat: number) {
 				const pt2d = p2d([lon, lat]);
@@ -121,16 +127,44 @@ export function useCountryPaths(
 		});
 
 		return geoPath().projection(interpolatingProjection);
-	}, [p2d, p3d, p3dRaw, progress, width, height]);
+	}, [p2d, p3dRaw, progress]);
+
+	const centroids = useMemo(() => {
+		const map = new Map<string, [number, number]>();
+		geoJson?.features.forEach((f) => {
+			map.set(f.properties.ISO_A2_EH, geoCentroid(f));
+		});
+		return map;
+	}, [geoJson]);
+
+	const rotate = useMemo(() => geoRotation(rotation), [rotation]);
+
+	const visibilityBlend = smoothstep(0.55, 0.9, progress);
 
 	const mapPaths = useMemo(() => {
 		if (!geoJson) return [];
-		return geoJson.features.map((feature) => ({
-			id: feature.properties.ISO_A2_EH,
-			name: feature.properties.NAME_EN,
-			svgPath: pathGenerator(feature) || ""
-		}));
-	}, [geoJson, pathGenerator]);
+		const rad = Math.PI / 180;
+
+		return geoJson.features.map((feature) => {
+			const id = feature.properties.ISO_A2_EH;
+			const centroid = centroids.get(id);
+
+			let opacity = 1;
+			if (centroid) {
+				const [rLon, rLat] = rotate(centroid);
+				const cosC = Math.cos(rLat * rad) * Math.cos(rLon * rad);
+				const frontFactor = smoothstep(-0.06, 0.06, cosC);
+				opacity = 1 - visibilityBlend * (1 - frontFactor);
+			}
+
+			return {
+				id,
+				name: feature.properties.NAME_EN,
+				svgPath: pathGenerator(feature) || "",
+				opacity
+			};
+		});
+	}, [geoJson, pathGenerator, centroids, rotate, visibilityBlend]);
 
 	const sphere2D = useMemo(
 		() => (geoPath().projection(p2d)({ type: "Sphere" }) as string) || "",

@@ -126,7 +126,7 @@ export const WorldMap = ({
 				ref={svgRef}
 				width={width}
 				height={height}
-				className={`bg-(--map-space) ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+				className={`bg-(--map-space) touch-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
 				{...dragHandlers}>
 				<defs>
 					<filter id='map-glow' x='-60%' y='-60%' width='220%' height='220%'>
@@ -189,7 +189,8 @@ export const WorldMap = ({
 										`hsl(var(--signal) / ${heatScale(count).toFixed(2)})`
 									:	MAP_BASE_STYLING.defaultFill
 								}
-								className={`transition-colors duration-300 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none ${
+								style={{ opacity: country.opacity }}
+								className={`transition-[fill,stroke,opacity] duration-300 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none ${
 									isSelected ? "stroke-[2px] stroke-primary" : "stroke-[0.05px]"
 								}`}
 								onClick={() => setCountry(isSelected ? null : country.id)}
