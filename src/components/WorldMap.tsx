@@ -1,5 +1,8 @@
 import { useMemo, useRef } from "react";
-import type { LocalizedGithubProfile } from "@/api/graphql.types";
+import type {
+	GithubUserProfile,
+	LocalizedGithubProfile
+} from "@/api/graphql.types";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
 import { Button } from "@/components/ui/button";
@@ -14,6 +17,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { useGlobeRotation } from "@/hooks/useGlobeRotation";
 import type { MAP_MODE } from "@/App";
+import { useMapZoom } from "@/hooks/useMapZoom";
+import { ZoomControls } from "@/components/ZoomControls";
 
 export interface WorldMapProps {
 	width: number;
@@ -21,8 +26,7 @@ export interface WorldMapProps {
 	setCountry: (country: string | null) => void;
 	audience: LocalizedGithubProfile[];
 	selectedCountry?: string | null;
-	username?: string;
-	avatarUrl?: string;
+	user: GithubUserProfile | null;
 	mapTypeLabel?: string;
 	mapMode: MAP_MODE;
 }
@@ -33,8 +37,7 @@ export const WorldMap = ({
 	setCountry,
 	audience,
 	selectedCountry = null,
-	username = "Developer",
-	avatarUrl,
+	user,
 	mapTypeLabel = "Network",
 	mapMode
 }: WorldMapProps) => {
@@ -52,9 +55,24 @@ export const WorldMap = ({
 	const heatScale = useHeatScale(profilesByCountry);
 	const svgRef = useRef<SVGSVGElement>(null);
 
-	const { rotation, isDragging, dragHandlers } = useGlobeRotation(
+	const {
+		zoom,
+		zoomIn,
+		zoomOut,
+		resetZoom,
+		canZoomIn,
+		canZoomOut,
+		isZoomed,
+		handleWheel
+	} = useMapZoom(1);
+
+	const { rotation, pan, isDragging, dragHandlers } = useGlobeRotation(
 		selectedCountry,
-		geoJson
+		geoJson,
+		zoom,
+		mapMode,
+		width,
+		height
 	);
 
 	const { mapPaths, sphere2D, sphere3D, progress } = useCountryPaths(
@@ -62,11 +80,13 @@ export const WorldMap = ({
 		width,
 		height,
 		rotation,
-		mapMode
+		pan,
+		mapMode,
+		zoom
 	);
 
 	const stats = useMapStats(audience, profilesByCountry);
-	const safeFilename = `${username.toLowerCase()}-${mapTypeLabel.toLowerCase().replace(/\s+/g, "-")}-map.png`;
+	const safeFilename = `${user?.login.toLowerCase()}-${mapTypeLabel.toLowerCase().replace(/\s+/g, "-")}-map.png`;
 
 	const { exportRef, handleExport, isExporting, justExported } = useMapSnapshot({
 		fileName: safeFilename
@@ -116,16 +136,23 @@ export const WorldMap = ({
 		);
 	}
 
+	const isInteractive = mapMode === "GLOBE" || isZoomed;
+	const cursorState =
+		!isInteractive ? "cursor-default"
+		: isDragging ? "cursor-grabbing"
+		: "cursor-grab";
+
 	return (
 		<div
 			ref={exportRef}
-			className='relative overflow-hidden'
+			className='relative overflow-hidden select-none'
 			style={{ width, height }}>
 			<svg
 				ref={svgRef}
 				width={width}
 				height={height}
-				className={`bg-(--map-space) touch-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+				onWheel={handleWheel}
+				className={`bg-(--map-space) touch-none ${cursorState}`}
 				{...dragHandlers}>
 				<defs>
 					<filter id='map-glow' x='-60%' y='-60%' width='220%' height='220%'>
@@ -205,8 +232,31 @@ export const WorldMap = ({
 				</g>
 			</svg>
 
+			<div className='absolute bottom-20 right-4 sm:right-6 z-20 exclude-from-export'>
+				<ZoomControls
+					zoomIn={zoomIn}
+					zoomOut={zoomOut}
+					resetZoom={resetZoom}
+					canZoomIn={canZoomIn}
+					canZoomOut={canZoomOut}
+					isZoomed={isZoomed}
+					zoom={zoom}
+				/>
+			</div>
+
 			<div className='absolute bottom-3 left-3 sm:bottom-6 sm:left-6 z-10 pointer-events-none'>
 				<Card className='flex flex-col gap-2 p-3.5 bg-card/85 backdrop-blur-md border-border/50 shadow-lg min-w-55 pointer-events-auto transition-all duration-200'>
+					<div className='flex items-center gap-2 pointer-events-none'>
+						<Avatar className='h-10 w-10 border-2 border-primary/20 shadow-sm bg-card'>
+							<AvatarImage src={user?.avatarUrl} crossOrigin='anonymous' />
+						</Avatar>
+						<div className='flex flex-col px-2 py-0.5 rounded-md'>
+							<h2 className='text-[10px] font-bold capitalize tracking-wider '>
+								{user?.name}'s {mapTypeLabel}
+							</h2>
+						</div>
+					</div>
+					<div className='h-px bg-border/50 w-full' />
 					{selectedCountryStats ?
 						<div>
 							<div className='flex items-center justify-between gap-2 mb-1'>
@@ -273,20 +323,6 @@ export const WorldMap = ({
 						</div>
 					}
 				</Card>
-			</div>
-			<div className='absolute top-3 left-3 sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 z-10 flex items-center gap-3 pointer-events-none p-3.5 bg-card/85 backdrop-blur-md border border-border/50 rounded-md'>
-				<Avatar className='h-10 w-10 border-2 border-primary/20 shadow-sm bg-card'>
-					<AvatarImage src={avatarUrl} crossOrigin='anonymous' />
-					<AvatarFallback>{username.substring(0, 2).toUpperCase()}</AvatarFallback>
-				</Avatar>
-				<div className='flex flex-col px-2 py-0.5 rounded-md'>
-					<h2 className='text-[10px] font-bold uppercase tracking-wider text-primary'>
-						{username}'s {mapTypeLabel}
-					</h2>
-					<p className='text-xs font-medium text-muted-foreground'>
-						Global Footprint
-					</p>
-				</div>
 			</div>
 
 			<div className='absolute top-4 sm:top-6 right-4 sm:right-6 z-20 exclude-from-export'>

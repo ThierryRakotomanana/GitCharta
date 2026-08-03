@@ -292,8 +292,7 @@ export default function App() {
 										setCountry={setCountry}
 										audience={currentAudience}
 										selectedCountry={country}
-										username={user?.name ?? "User"}
-										avatarUrl={user?.avatarUrl}
+										user={user}
 										mapTypeLabel={
 											AUDIENCE_TABS.find((t) => t.value === audienceType)?.label
 											|| "Network"
