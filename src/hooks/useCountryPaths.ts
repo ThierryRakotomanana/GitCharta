@@ -93,6 +93,15 @@ export function useCountryPaths(
 		[width, height, rotation]
 	);
 
+	const p3dRaw = useMemo(
+		() =>
+			geoOrthographic()
+				.fitSize([width, height], { type: "Sphere" })
+				.rotate(rotation)
+				.clipAngle(null),
+		[width, height, rotation]
+	);
+
 	const pathGenerator = useMemo(() => {
 		if (progress === 0) return geoPath().projection(p2d);
 		if (progress === 1) return geoPath().projection(p3d);
@@ -100,7 +109,7 @@ export function useCountryPaths(
 		const interpolatingProjection = geoTransform({
 			point: function (this: { stream: GeoStream }, lon: number, lat: number) {
 				const pt2d = p2d([lon, lat]);
-				const pt3d = p3d([lon, lat]);
+				const pt3d = p3dRaw([lon, lat]);
 
 				if (!pt2d || !pt3d) return;
 
@@ -112,7 +121,7 @@ export function useCountryPaths(
 		});
 
 		return geoPath().projection(interpolatingProjection);
-	}, [p2d, p3d, progress, width, height]);
+	}, [p2d, p3d, p3dRaw, progress, width, height]);
 
 	const mapPaths = useMemo(() => {
 		if (!geoJson) return [];
