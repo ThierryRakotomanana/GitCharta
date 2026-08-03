@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type { LocalizedGithubProfile } from "@/api/graphql.types";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
@@ -12,6 +13,8 @@ import { getRegionName } from "@/lib/region";
 import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { useGlobeRotation } from "@/hooks/useGlobeRotation";
+import type { MAP_MODE } from "@/App";
 
 export interface WorldMapProps {
 	width: number;
@@ -22,6 +25,7 @@ export interface WorldMapProps {
 	username?: string;
 	avatarUrl?: string;
 	mapTypeLabel?: string;
+	mapMode: MAP_MODE;
 }
 
 export const WorldMap = ({
@@ -32,7 +36,8 @@ export const WorldMap = ({
 	selectedCountry = null,
 	username = "Developer",
 	avatarUrl,
-	mapTypeLabel = "Network"
+	mapTypeLabel = "Network",
+	mapMode
 }: WorldMapProps) => {
 	const url =
 		"https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson";
@@ -44,9 +49,22 @@ export const WorldMap = ({
 		retry: setReloadKey
 	} = useGeoJson<WorldGeoJson>(url);
 
-	const { mapPaths, spherePath } = useCountryPaths(geoJson, width, height);
 	const profilesByCountry = useProfilesByCountry(audience);
 	const heatScale = useHeatScale(profilesByCountry);
+	const svgRef = useRef<SVGSVGElement>(null);
+
+	const { rotation, isDragging, dragHandlers } = useGlobeRotation(
+		selectedCountry,
+		geoJson
+	);
+
+	const { mapPaths, sphere2D, sphere3D, progress } = useCountryPaths(
+		geoJson,
+		width,
+		height,
+		rotation,
+		mapMode
+	);
 
 	const stats = useMapStats(audience, profilesByCountry);
 	const safeFilename = `${username.toLowerCase()}-${mapTypeLabel.toLowerCase().replace(/\s+/g, "-")}-map.png`;
@@ -105,9 +123,11 @@ export const WorldMap = ({
 			className='relative overflow-hidden'
 			style={{ width, height }}>
 			<svg
+				ref={svgRef}
 				width={width}
 				height={height}
-				className='absolute inset-0 bg-(--map-space)'>
+				className={`bg-(--map-space) ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+				{...dragHandlers}>
 				<defs>
 					<filter id='map-glow' x='-60%' y='-60%' width='220%' height='220%'>
 						<feGaussianBlur stdDeviation='6' result='blur' />
@@ -129,8 +149,29 @@ export const WorldMap = ({
 						</feMerge>
 					</filter>
 				</defs>
+
 				<g>
-					<path d={spherePath} fill='var(--map-water)' />
+					<path
+						d={sphere2D}
+						fill='var(--map-water)'
+						opacity={1 - progress}
+						style={{
+							transform: `scale(${1 - progress * 0.15})`,
+							transformOrigin: "center center",
+							transformBox: "fill-box"
+						}}
+					/>
+
+					<path
+						d={sphere3D}
+						fill='var(--map-water)'
+						opacity={progress}
+						style={{
+							transform: `scale(${0.85 + progress * 0.15})`,
+							transformOrigin: "center center",
+							transformBox: "fill-box"
+						}}
+					/>
 				</g>
 				<g>
 					{mapPaths.map((country) => {
