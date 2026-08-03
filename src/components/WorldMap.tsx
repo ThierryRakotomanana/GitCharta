@@ -157,7 +157,8 @@ export const WorldMap = ({
 						opacity={1 - progress}
 						style={{
 							transform: `scale(${1 - progress * 0.15})`,
-							transformOrigin: "center center"
+							transformOrigin: "center center",
+							transformBox: "fill-box"
 						}}
 					/>
 
@@ -167,7 +168,8 @@ export const WorldMap = ({
 						opacity={progress}
 						style={{
 							transform: `scale(${0.85 + progress * 0.15})`,
-							transformOrigin: "center center"
+							transformOrigin: "center center",
+							transformBox: "fill-box"
 						}}
 					/>
 				</g>
