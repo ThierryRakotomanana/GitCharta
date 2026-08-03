@@ -6,7 +6,7 @@ import type { MAP_MODE } from "@/App";
 const BASE_DRAG_SENSITIVITY = 0.4;
 const ANIMATION_MS = 750;
 
-export function useMapInteraction(
+export function useGlobeRotation(
 	selectedCountry: string | null | undefined,
 	geoJson: WorldGeoJson | null,
 	zoom: number,
