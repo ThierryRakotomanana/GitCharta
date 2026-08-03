@@ -18,7 +18,7 @@ import { Card } from "@/components/ui/card";
 import { useGlobeRotation } from "@/hooks/useGlobeRotation";
 import type { MAP_MODE } from "@/App";
 import { useMapZoom } from "@/hooks/useMapZoom";
-import { ZoomControls } from "@/components/ZommControls";
+import { ZoomControls } from "@/components/ZoomControls";
 
 export interface WorldMapProps {
 	width: number;
