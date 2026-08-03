@@ -2,6 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { geoCentroid } from "d3-geo";
 import type { CountryFeature, WorldGeoJson } from "@/hooks/useCountryPaths";
 
+const DRAG_THRESHOLD_PX = 6;
+const DRAG_SENSITIVITY = 0.4;
+const ROTATION_ANIMATION_MS = 750;
+
 export function useGlobeRotation(
 	selectedCountry: string | null | undefined,
 	geoJson: WorldGeoJson | null
@@ -9,12 +13,12 @@ export function useGlobeRotation(
 	const [rotation, setRotation] = useState<[number, number, number]>([0, 0, 0]);
 	const currentRotationRef = useRef(rotation);
 	const [isDragging, setIsDragging] = useState(false);
-
 	const dragStartRef = useRef<{
 		x: number;
 		y: number;
 		rotation: [number, number, number];
 	} | null>(null);
+	const pointerIdRef = useRef<number | null>(null);
 	const animationRef = useRef<number | null>(null);
 
 	useEffect(() => {
@@ -23,8 +27,7 @@ export function useGlobeRotation(
 
 	const onPointerDown = useCallback((e: React.PointerEvent) => {
 		if (animationRef.current) cancelAnimationFrame(animationRef.current);
-		e.currentTarget.setPointerCapture(e.pointerId);
-		setIsDragging(true);
+		pointerIdRef.current = e.pointerId;
 		dragStartRef.current = {
 			x: e.clientX,
 			y: e.clientY,
@@ -34,30 +37,40 @@ export function useGlobeRotation(
 
 	const onPointerMove = useCallback(
 		(e: React.PointerEvent) => {
-			if (!isDragging || !dragStartRef.current) return;
+			if (!dragStartRef.current || e.pointerId !== pointerIdRef.current) return;
 
 			const dx = e.clientX - dragStartRef.current.x;
 			const dy = e.clientY - dragStartRef.current.y;
 
-			const sensitivity = 0.5;
-			const newRotation: [number, number, number] = [
-				dragStartRef.current.rotation[0] + dx * sensitivity,
-				dragStartRef.current.rotation[1] - dy * sensitivity,
+			if (!isDragging) {
+				if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
+				setIsDragging(true);
+				e.currentTarget.setPointerCapture(e.pointerId);
+			}
+
+			const nextRotation: [number, number, number] = [
+				dragStartRef.current.rotation[0] + dx * DRAG_SENSITIVITY,
+				Math.max(
+					-90,
+					Math.min(90, dragStartRef.current.rotation[1] - dy * DRAG_SENSITIVITY)
+				),
 				0
 			];
-
-			newRotation[1] = Math.max(-90, Math.min(90, newRotation[1]));
-			setRotation(newRotation);
+			setRotation(nextRotation);
 		},
 		[isDragging]
 	);
 
 	const onPointerUp = useCallback((e: React.PointerEvent) => {
-		if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+		if (
+			pointerIdRef.current !== null
+			&& e.currentTarget.hasPointerCapture?.(e.pointerId)
+		) {
 			e.currentTarget.releasePointerCapture(e.pointerId);
 		}
-		setIsDragging(false);
+		pointerIdRef.current = null;
 		dragStartRef.current = null;
+		setIsDragging(false);
 	}, []);
 
 	useEffect(() => {
@@ -69,6 +82,8 @@ export function useGlobeRotation(
 		if (!feature) return;
 
 		const centroid = geoCentroid(feature);
+		if (isNaN(centroid[0]) || isNaN(centroid[1])) return;
+
 		const targetRotation: [number, number, number] = [
 			-centroid[0],
 			-centroid[1],
@@ -76,18 +91,16 @@ export function useGlobeRotation(
 		];
 		const startRotation = currentRotationRef.current;
 
-		let dLambda = targetRotation[0] - startRotation[0];
-		dLambda = dLambda % 360;
+		let dLambda = (targetRotation[0] - startRotation[0]) % 360;
 		if (dLambda < -180) dLambda += 360;
 		if (dLambda > 180) dLambda -= 360;
 
 		const startTime = performance.now();
-		const duration = 750;
 
 		const animate = (time: number) => {
 			const elapsed = time - startTime;
-			const progress = Math.min(elapsed / duration, 1);
-			const ease = 1 - Math.pow(1 - progress, 3);
+			const progress = Math.min(elapsed / ROTATION_ANIMATION_MS, 1);
+			const ease = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
 
 			setRotation([
 				startRotation[0] + dLambda * ease,
