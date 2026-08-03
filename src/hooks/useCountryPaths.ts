@@ -1,4 +1,3 @@
-// src/hooks/useCountryPaths.ts
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
 	geoCentroid,
@@ -55,7 +54,7 @@ export function useCountryPaths(
 	const [progress, setProgress] = useState(mode === "GLOBE" ? 1 : 0);
 	const progressRef = useRef(progress);
 	const animRef = useRef<number | null>(null);
-	const duration = 750;
+	const DURATION = 750;
 
 	useEffect(() => {
 		progressRef.current = progress;
@@ -65,29 +64,26 @@ export function useCountryPaths(
 		const target = mode === "GLOBE" ? 1 : 0;
 		const startProgress = progressRef.current;
 		const startTime = performance.now();
-		const frameInterval = 1000 / 30;
-		let lastFrameTime = startTime;
 
 		const animate = (now: number) => {
 			const elapsed = now - startTime;
-			const t = Math.min(1, elapsed / duration);
+			const t = Math.min(1, elapsed / DURATION);
 			const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-			if (now - lastFrameTime >= frameInterval || t >= 1) {
-				lastFrameTime = now;
-				setProgress(startProgress + (target - startProgress) * ease);
-			}
+			setProgress(startProgress + (target - startProgress) * ease);
 
 			if (t < 1) {
 				animRef.current = requestAnimationFrame(animate);
 			}
 		};
 
+		if (animRef.current) cancelAnimationFrame(animRef.current);
 		animRef.current = requestAnimationFrame(animate);
+
 		return () => {
 			if (animRef.current) cancelAnimationFrame(animRef.current);
 		};
-	}, [mode, duration]);
+	}, [mode]);
 
 	const p2d = useMemo(
 		() => geoNaturalEarth1().fitSize([width, height], { type: "Sphere" }),
@@ -98,7 +94,8 @@ export function useCountryPaths(
 		() =>
 			geoOrthographic()
 				.fitSize([width, height], { type: "Sphere" })
-				.rotate(rotation),
+				.rotate(rotation)
+				.clipAngle(90),
 		[width, height, rotation]
 	);
 
@@ -111,7 +108,14 @@ export function useCountryPaths(
 		[width, height, rotation]
 	);
 
-	const pathGenerator = useMemo(() => {
+	const activePathGenerator = useMemo(() => {
+		if (progress === 0) {
+			return geoPath().projection(p2d);
+		}
+		if (progress === 1) {
+			return geoPath().projection(p3d);
+		}
+
 		const interpolatingProjection = geoTransform({
 			point: function (this: { stream: GeoStream }, lon: number, lat: number) {
 				const pt2d = p2d([lon, lat]);
@@ -127,7 +131,7 @@ export function useCountryPaths(
 		});
 
 		return geoPath().projection(interpolatingProjection);
-	}, [p2d, p3dRaw, progress]);
+	}, [p2d, p3d, p3dRaw, progress]);
 
 	const centroids = useMemo(() => {
 		const map = new Map<string, [number, number]>();
@@ -138,7 +142,6 @@ export function useCountryPaths(
 	}, [geoJson]);
 
 	const rotate = useMemo(() => geoRotation(rotation), [rotation]);
-
 	const visibilityBlend = smoothstep(0.55, 0.9, progress);
 
 	const mapPaths = useMemo(() => {
@@ -150,7 +153,7 @@ export function useCountryPaths(
 			const centroid = centroids.get(id);
 
 			let opacity = 1;
-			if (centroid) {
+			if (centroid && progress > 0) {
 				const [rLon, rLat] = rotate(centroid);
 				const cosC = Math.cos(rLat * rad) * Math.cos(rLon * rad);
 				const frontFactor = smoothstep(-0.06, 0.06, cosC);
@@ -160,11 +163,11 @@ export function useCountryPaths(
 			return {
 				id,
 				name: feature.properties.NAME_EN,
-				svgPath: pathGenerator(feature) || "",
+				svgPath: activePathGenerator(feature) || "",
 				opacity
 			};
 		});
-	}, [geoJson, pathGenerator, centroids, rotate, visibilityBlend]);
+	}, [geoJson, activePathGenerator, centroids, rotate, visibilityBlend, progress]);
 
 	const sphere2D = useMemo(
 		() => (geoPath().projection(p2d)({ type: "Sphere" }) as string) || "",

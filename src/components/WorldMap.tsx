@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import type { LocalizedGithubProfile } from "@/api/graphql.types";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
@@ -10,7 +10,6 @@ import { useCountryPaths, type WorldGeoJson } from "@/hooks/useCountryPaths";
 import { useHeatScale } from "@/hooks/useHeatScale";
 import { useProfilesByCountry } from "@/hooks/useProfilesByCountry";
 import { getRegionName } from "@/lib/region";
-import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { useGlobeRotation } from "@/hooks/useGlobeRotation";
@@ -179,6 +178,9 @@ export const WorldMap = ({
 						const hasData = count > 0;
 						const isSelected =
 							selectedCountry !== null && country.id === selectedCountry;
+
+						if (!country.svgPath) return null;
+
 						return (
 							<path
 								key={`${country.id}-${country.name}`}
@@ -189,8 +191,11 @@ export const WorldMap = ({
 										`hsl(var(--signal) / ${heatScale(count).toFixed(2)})`
 									:	MAP_BASE_STYLING.defaultFill
 								}
-								style={{ opacity: country.opacity }}
-								className={`transition-[fill,stroke,opacity] duration-300 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none ${
+								style={{
+									opacity: country.opacity,
+									pointerEvents: country.opacity < 0.1 ? "none" : "auto"
+								}}
+								className={`transition-[fill,stroke] duration-300 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none ${
 									isSelected ? "stroke-[2px] stroke-primary" : "stroke-[0.05px]"
 								}`}
 								onClick={() => setCountry(isSelected ? null : country.id)}
@@ -210,7 +215,7 @@ export const WorldMap = ({
 								</span>
 								<button
 									onClick={() => setCountry(null)}
-									className='text-muted-foreground hover:text-foreground rounded-sm p-0.5'>
+									className='text-muted-foreground hover:text-foreground rounded-sm p-0.5 cursor-pointer'>
 									<X className='h-3.5 w-3.5' />
 								</button>
 							</div>
@@ -269,7 +274,7 @@ export const WorldMap = ({
 					}
 				</Card>
 			</div>
-			<div className='absolute top-3 left-3 sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 z-10 flex items-center gap-3  pointer-events-none p-3.5 bg-card/85 backdrop-blur-md border-border/50  rounded-md'>
+			<div className='absolute top-3 left-3 sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 z-10 flex items-center gap-3 pointer-events-none p-3.5 bg-card/85 backdrop-blur-md border border-border/50 rounded-md'>
 				<Avatar className='h-10 w-10 border-2 border-primary/20 shadow-sm bg-card'>
 					<AvatarImage src={avatarUrl} crossOrigin='anonymous' />
 					<AvatarFallback>{username.substring(0, 2).toUpperCase()}</AvatarFallback>
@@ -292,7 +297,7 @@ export const WorldMap = ({
 					onClick={handleExport}
 					disabled={isExporting}
 					title='Save snapshot'
-					className='h-10 w-10 sm:h-9 sm:w-9 bg-card border border-border shadow-sm'>
+					className='h-10 w-10 sm:h-9 sm:w-9 bg-card border border-border shadow-sm cursor-pointer'>
 					{justExported ?
 						<Check className='h-4 w-4 text-primary' />
 					:	<Camera className={`h-4 w-4 ${isExporting ? "animate-pulse" : ""}`} />}

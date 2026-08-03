@@ -1,9 +1,10 @@
-// src/hooks/useGlobeRotation.ts
 import { useCallback, useEffect, useRef, useState } from "react";
 import { geoCentroid } from "d3-geo";
 import type { CountryFeature, WorldGeoJson } from "@/hooks/useCountryPaths";
 
 const DRAG_THRESHOLD_PX = 6;
+const DRAG_SENSITIVITY = 0.4;
+const ROTATION_ANIMATION_MS = 750;
 
 export function useGlobeRotation(
 	selectedCountry: string | null | undefined,
@@ -47,20 +48,24 @@ export function useGlobeRotation(
 				e.currentTarget.setPointerCapture(e.pointerId);
 			}
 
-			const sensitivity = 0.5;
-			const newRotation: [number, number, number] = [
-				dragStartRef.current.rotation[0] + dx * sensitivity,
-				dragStartRef.current.rotation[1] - dy * sensitivity,
+			const nextRotation: [number, number, number] = [
+				dragStartRef.current.rotation[0] + dx * DRAG_SENSITIVITY,
+				Math.max(
+					-90,
+					Math.min(90, dragStartRef.current.rotation[1] - dy * DRAG_SENSITIVITY)
+				),
 				0
 			];
-			newRotation[1] = Math.max(-90, Math.min(90, newRotation[1]));
-			setRotation(newRotation);
+			setRotation(nextRotation);
 		},
 		[isDragging]
 	);
 
 	const onPointerUp = useCallback((e: React.PointerEvent) => {
-		if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+		if (
+			pointerIdRef.current !== null
+			&& e.currentTarget.hasPointerCapture?.(e.pointerId)
+		) {
 			e.currentTarget.releasePointerCapture(e.pointerId);
 		}
 		pointerIdRef.current = null;
@@ -70,38 +75,47 @@ export function useGlobeRotation(
 
 	useEffect(() => {
 		if (!selectedCountry || !geoJson) return;
+
 		const feature = geoJson.features.find(
 			(f: CountryFeature) => f.properties.ISO_A2_EH === selectedCountry
 		);
 		if (!feature) return;
+
 		const centroid = geoCentroid(feature);
+		if (isNaN(centroid[0]) || isNaN(centroid[1])) return;
+
 		const targetRotation: [number, number, number] = [
 			-centroid[0],
 			-centroid[1],
 			0
 		];
 		const startRotation = currentRotationRef.current;
-		let dLambda = targetRotation[0] - startRotation[0];
-		dLambda = dLambda % 360;
+
+		let dLambda = (targetRotation[0] - startRotation[0]) % 360;
 		if (dLambda < -180) dLambda += 360;
 		if (dLambda > 180) dLambda -= 360;
+
 		const startTime = performance.now();
-		const duration = 750;
+
 		const animate = (time: number) => {
 			const elapsed = time - startTime;
-			const progress = Math.min(elapsed / duration, 1);
-			const ease = 1 - Math.pow(1 - progress, 3);
+			const progress = Math.min(elapsed / ROTATION_ANIMATION_MS, 1);
+			const ease = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
+
 			setRotation([
 				startRotation[0] + dLambda * ease,
 				startRotation[1] + (targetRotation[1] - startRotation[1]) * ease,
 				0
 			]);
+
 			if (progress < 1) {
 				animationRef.current = requestAnimationFrame(animate);
 			}
 		};
+
 		if (animationRef.current) cancelAnimationFrame(animationRef.current);
 		animationRef.current = requestAnimationFrame(animate);
+
 		return () => {
 			if (animationRef.current) cancelAnimationFrame(animationRef.current);
 		};
