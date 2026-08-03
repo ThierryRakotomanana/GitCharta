@@ -58,7 +58,7 @@ export const WorldMap = ({
 		geoJson
 	);
 
-	const { mapPaths, spherePath } = useCountryPaths(
+	const { mapPaths, sphere2D, sphere3D, progress } = useCountryPaths(
 		geoJson,
 		width,
 		height,
@@ -150,11 +150,27 @@ export const WorldMap = ({
 					</filter>
 				</defs>
 
-				{mapMode == "SPHERE" && (
-					<g>
-						<path d={spherePath} fill='var(--map-water)' />
-					</g>
-				)}
+				<g>
+					<path
+						d={sphere2D}
+						fill='var(--map-water)'
+						opacity={1 - progress}
+						style={{
+							transform: `scale(${1 - progress * 0.15})`,
+							transformOrigin: "center center"
+						}}
+					/>
+
+					<path
+						d={sphere3D}
+						fill='var(--map-water)'
+						opacity={progress}
+						style={{
+							transform: `scale(${0.85 + progress * 0.15})`,
+							transformOrigin: "center center"
+						}}
+					/>
+				</g>
 				<g>
 					{mapPaths.map((country) => {
 						const count = profilesByCountry.get(country.id)?.length ?? 0;
