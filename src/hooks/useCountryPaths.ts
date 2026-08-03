@@ -44,7 +44,9 @@ export function useCountryPaths(
 	width: number,
 	height: number,
 	rotation: [number, number, number],
-	mode: MAP_MODE
+	pan: [number, number],
+	mode: MAP_MODE,
+	zoom: number = 1
 ): {
 	mapPaths: CountryPath[];
 	sphere2D: string;
@@ -85,36 +87,37 @@ export function useCountryPaths(
 		};
 	}, [mode]);
 
-	const p2d = useMemo(
-		() => geoNaturalEarth1().fitSize([width, height], { type: "Sphere" }),
-		[width, height]
-	);
+	const p2d = useMemo(() => {
+		const proj = geoNaturalEarth1().fitSize([width, height], { type: "Sphere" });
+		const baseScale = proj.scale();
+		const baseTranslate = proj.translate();
 
-	const p3d = useMemo(
-		() =>
-			geoOrthographic()
-				.fitSize([width, height], { type: "Sphere" })
-				.rotate(rotation)
-				.clipAngle(90),
-		[width, height, rotation]
-	);
+		proj.scale(baseScale * zoom);
 
-	const p3dRaw = useMemo(
-		() =>
-			geoOrthographic()
-				.fitSize([width, height], { type: "Sphere" })
-				.rotate(rotation)
-				.clipAngle(null),
-		[width, height, rotation]
-	);
+		proj.translate([baseTranslate[0] + pan[0], baseTranslate[1] + pan[1]]);
+
+		return proj;
+	}, [width, height, zoom, pan]);
+
+	const p3d = useMemo(() => {
+		const proj = geoOrthographic()
+			.fitSize([width, height], { type: "Sphere" })
+			.rotate(rotation)
+			.clipAngle(90);
+		return proj.scale(proj.scale() * zoom);
+	}, [width, height, rotation, zoom]);
+
+	const p3dRaw = useMemo(() => {
+		const proj = geoOrthographic()
+			.fitSize([width, height], { type: "Sphere" })
+			.rotate(rotation)
+			.clipAngle(null);
+		return proj.scale(proj.scale() * zoom);
+	}, [width, height, rotation, zoom]);
 
 	const activePathGenerator = useMemo(() => {
-		if (progress === 0) {
-			return geoPath().projection(p2d);
-		}
-		if (progress === 1) {
-			return geoPath().projection(p3d);
-		}
+		if (progress === 0) return geoPath().projection(p2d);
+		if (progress === 1) return geoPath().projection(p3d);
 
 		const interpolatingProjection = geoTransform({
 			point: function (this: { stream: GeoStream }, lon: number, lat: number) {
