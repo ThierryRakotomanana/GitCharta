@@ -35,11 +35,11 @@ const AUDIENCE_TABS: { value: AudienceType; label: string; noun: string }[] = [
 	{ value: "ghosts", label: "Ghost Zone", noun: "ghost" }
 ];
 
-export type MAP_MODE = "GLODE" | "SPHERE";
+export type MAP_MODE = "GLOBE" | "SPHERE";
 
 const MODE_TABS: { value: MAP_MODE; label: string }[] = [
 	{ value: "SPHERE", label: "2D" },
-	{ value: "GLODE", label: "3D" }
+	{ value: "GLOBE", label: "3D" }
 ];
 
 type AppState = {

@@ -43,26 +43,31 @@ export function useCountryPaths(
 	sphere3D: string;
 	progress: number;
 } {
-	const [progress, setProgress] = useState(mode === "GLODE" ? 1 : 0);
+	const [progress, setProgress] = useState(mode === "GLOBE" ? 1 : 0);
+	const progressRef = useRef(progress);
 	const animRef = useRef<number | null>(null);
 	const duration = 750;
 
 	useEffect(() => {
-		const target = mode === "GLODE" ? 1 : 0;
+		progressRef.current = progress;
+	}, [progress]);
+
+	useEffect(() => {
+		const target = mode === "GLOBE" ? 1 : 0;
+		const startProgress = progressRef.current;
 		const startTime = performance.now();
-		let startProgress: number | null = null;
+		const frameInterval = 1000 / 30;
+		let lastFrameTime = startTime;
 
 		const animate = (now: number) => {
 			const elapsed = now - startTime;
 			const t = Math.min(1, elapsed / duration);
 			const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-			setProgress((prev) => {
-				if (startProgress === null) {
-					startProgress = prev;
-				}
-				return startProgress + (target - startProgress) * ease;
-			});
+			if (now - lastFrameTime >= frameInterval || t >= 1) {
+				lastFrameTime = now;
+				setProgress(startProgress + (target - startProgress) * ease);
+			}
 
 			if (t < 1) {
 				animRef.current = requestAnimationFrame(animate);
@@ -94,8 +99,10 @@ export function useCountryPaths(
 
 		const interpolatingProjection = geoTransform({
 			point: function (this: { stream: GeoStream }, lon: number, lat: number) {
-				const pt2d = p2d([lon, lat]) ?? [width / 2, height / 2];
-				const pt3d = p3d([lon, lat]) ?? [width / 2, height / 2];
+				const pt2d = p2d([lon, lat]);
+				const pt3d = p3d([lon, lat]);
+
+				if (!pt2d || !pt3d) return;
 
 				const x = pt2d[0] + (pt3d[0] - pt2d[0]) * progress;
 				const y = pt2d[1] + (pt3d[1] - pt2d[1]) * progress;

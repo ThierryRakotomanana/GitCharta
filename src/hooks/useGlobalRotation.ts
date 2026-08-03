@@ -21,27 +21,23 @@ export function useGlobeRotation(
 		currentRotationRef.current = rotation;
 	}, [rotation]);
 
-	const onPointerDown = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+	const onPointerDown = useCallback((e: React.PointerEvent) => {
 		if (animationRef.current) cancelAnimationFrame(animationRef.current);
+		e.currentTarget.setPointerCapture(e.pointerId);
 		setIsDragging(true);
-		const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-		const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
 		dragStartRef.current = {
-			x: clientX,
-			y: clientY,
+			x: e.clientX,
+			y: e.clientY,
 			rotation: currentRotationRef.current
 		};
 	}, []);
 
 	const onPointerMove = useCallback(
-		(e: React.MouseEvent | React.TouchEvent) => {
+		(e: React.PointerEvent) => {
 			if (!isDragging || !dragStartRef.current) return;
 
-			const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-			const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-
-			const dx = clientX - dragStartRef.current.x;
-			const dy = clientY - dragStartRef.current.y;
+			const dx = e.clientX - dragStartRef.current.x;
+			const dy = e.clientY - dragStartRef.current.y;
 
 			const sensitivity = 0.5;
 			const newRotation: [number, number, number] = [
@@ -56,7 +52,10 @@ export function useGlobeRotation(
 		[isDragging]
 	);
 
-	const onPointerUp = useCallback(() => {
+	const onPointerUp = useCallback((e: React.PointerEvent) => {
+		if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+			e.currentTarget.releasePointerCapture(e.pointerId);
+		}
 		setIsDragging(false);
 		dragStartRef.current = null;
 	}, []);
@@ -113,13 +112,11 @@ export function useGlobeRotation(
 		rotation,
 		isDragging,
 		dragHandlers: {
-			onMouseDown: onPointerDown,
-			onMouseMove: onPointerMove,
-			onMouseUp: onPointerUp,
-			onMouseLeave: onPointerUp,
-			onTouchStart: onPointerDown,
-			onTouchMove: onPointerMove,
-			onTouchEnd: onPointerUp
+			onPointerDown,
+			onPointerMove,
+			onPointerUp,
+			onPointerLeave: onPointerUp,
+			onPointerCancel: onPointerUp
 		}
 	};
 }
