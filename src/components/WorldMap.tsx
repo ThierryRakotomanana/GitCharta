@@ -13,7 +13,7 @@ import { getRegionName } from "@/lib/region";
 import { useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { useGlobeRotation } from "@/hooks/useGlobalRotation";
+import { useGlobeRotation } from "@/hooks/useGlobeRotation";
 import type { MAP_MODE } from "@/App";
 
 export interface WorldMapProps {
