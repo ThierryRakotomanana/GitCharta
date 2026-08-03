@@ -1,79 +1,98 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { geoCentroid } from "d3-geo";
 import type { CountryFeature, WorldGeoJson } from "@/hooks/useCountryPaths";
+import type { MAP_MODE } from "@/App";
 
-const DRAG_THRESHOLD_PX = 6;
-const DRAG_SENSITIVITY = 0.4;
-const ROTATION_ANIMATION_MS = 750;
+const BASE_DRAG_SENSITIVITY = 0.4;
+const ANIMATION_MS = 750;
 
-export function useGlobeRotation(
+export function useMapInteraction(
 	selectedCountry: string | null | undefined,
-	geoJson: WorldGeoJson | null
+	geoJson: WorldGeoJson | null,
+	zoom: number,
+	mapMode: MAP_MODE,
+	width: number,
+	height: number
 ) {
 	const [rotation, setRotation] = useState<[number, number, number]>([0, 0, 0]);
-	const currentRotationRef = useRef(rotation);
+	const [pan, setPan] = useState<[number, number]>([0, 0]);
 	const [isDragging, setIsDragging] = useState(false);
+
+	const currentRotationRef = useRef(rotation);
 	const dragStartRef = useRef<{
 		x: number;
 		y: number;
-		rotation: [number, number, number];
+		rot: [number, number, number];
+		pan: [number, number];
 	} | null>(null);
-	const pointerIdRef = useRef<number | null>(null);
 	const animationRef = useRef<number | null>(null);
-
 	useEffect(() => {
 		currentRotationRef.current = rotation;
 	}, [rotation]);
+	const effectivePan: [number, number] = zoom <= 1 ? [0, 0] : pan;
 
-	const onPointerDown = useCallback((e: React.PointerEvent) => {
-		if (animationRef.current) cancelAnimationFrame(animationRef.current);
-		pointerIdRef.current = e.pointerId;
-		dragStartRef.current = {
-			x: e.clientX,
-			y: e.clientY,
-			rotation: currentRotationRef.current
-		};
-	}, []);
+	const onPointerDown = useCallback(
+		(e: React.PointerEvent) => {
+			if (animationRef.current) cancelAnimationFrame(animationRef.current);
+
+			if (mapMode === "SPHERE" && zoom <= 1) return;
+
+			setIsDragging(true);
+			dragStartRef.current = {
+				x: e.clientX,
+				y: e.clientY,
+				rot: currentRotationRef.current,
+				pan: effectivePan
+			};
+			e.currentTarget.setPointerCapture(e.pointerId);
+		},
+		[mapMode, zoom, effectivePan]
+	);
 
 	const onPointerMove = useCallback(
 		(e: React.PointerEvent) => {
-			if (!dragStartRef.current || e.pointerId !== pointerIdRef.current) return;
+			if (!dragStartRef.current) return;
 
 			const dx = e.clientX - dragStartRef.current.x;
 			const dy = e.clientY - dragStartRef.current.y;
 
-			if (!isDragging) {
-				if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
-				setIsDragging(true);
-				e.currentTarget.setPointerCapture(e.pointerId);
-			}
+			if (mapMode === "SPHERE") {
+				const maxX = Math.max(0, (width * zoom - width) / 2);
+				const maxY = Math.max(0, (height * zoom - height) / 2);
 
-			const nextRotation: [number, number, number] = [
-				dragStartRef.current.rotation[0] + dx * DRAG_SENSITIVITY,
-				Math.max(
-					-90,
-					Math.min(90, dragStartRef.current.rotation[1] - dy * DRAG_SENSITIVITY)
-				),
-				0
-			];
-			setRotation(nextRotation);
+				setPan([
+					Math.max(-maxX, Math.min(maxX, dragStartRef.current.pan[0] + dx)),
+					Math.max(-maxY, Math.min(maxY, dragStartRef.current.pan[1] + dy))
+				]);
+			} else {
+				const sensitivity = BASE_DRAG_SENSITIVITY / zoom;
+				setRotation([
+					dragStartRef.current.rot[0] + dx * sensitivity,
+					Math.max(
+						-90,
+						Math.min(90, dragStartRef.current.rot[1] - dy * sensitivity)
+					),
+					0
+				]);
+			}
 		},
-		[isDragging]
+		[mapMode, zoom, width, height]
 	);
 
 	const onPointerUp = useCallback((e: React.PointerEvent) => {
-		if (
-			pointerIdRef.current !== null
-			&& e.currentTarget.hasPointerCapture?.(e.pointerId)
-		) {
-			e.currentTarget.releasePointerCapture(e.pointerId);
+		if (dragStartRef.current) {
+			try {
+				e.currentTarget.releasePointerCapture(e.pointerId);
+			} catch (err) {
+				console.warn("Failed to release pointer capture:", err);
+			}
 		}
-		pointerIdRef.current = null;
 		dragStartRef.current = null;
 		setIsDragging(false);
 	}, []);
 
 	useEffect(() => {
+		if (mapMode === "SPHERE") return;
 		if (!selectedCountry || !geoJson) return;
 
 		const feature = geoJson.features.find(
@@ -98,9 +117,8 @@ export function useGlobeRotation(
 		const startTime = performance.now();
 
 		const animate = (time: number) => {
-			const elapsed = time - startTime;
-			const progress = Math.min(elapsed / ROTATION_ANIMATION_MS, 1);
-			const ease = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
+			const progress = Math.min((time - startTime) / ANIMATION_MS, 1);
+			const ease = 1 - Math.pow(1 - progress, 3);
 
 			setRotation([
 				startRotation[0] + dLambda * ease,
@@ -119,10 +137,11 @@ export function useGlobeRotation(
 		return () => {
 			if (animationRef.current) cancelAnimationFrame(animationRef.current);
 		};
-	}, [selectedCountry, geoJson]);
+	}, [selectedCountry, geoJson, mapMode]);
 
 	return {
 		rotation,
+		pan: effectivePan,
 		isDragging,
 		dragHandlers: {
 			onPointerDown,
