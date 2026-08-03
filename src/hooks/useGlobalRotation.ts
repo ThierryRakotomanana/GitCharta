@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { geoCentroid } from "d3-geo";
-import type { WorldGeoJson } from "@/components/WorldMap";
+import type { CountryFeature, WorldGeoJson } from "@/hooks/useCountryPaths";
 
 export function useGlobeRotation(
 	selectedCountry: string | null | undefined,
@@ -65,7 +65,7 @@ export function useGlobeRotation(
 		if (!selectedCountry || !geoJson) return;
 
 		const feature = geoJson.features.find(
-			(f) => f.properties.ISO_A2_EH === selectedCountry
+			(f: CountryFeature) => f.properties.ISO_A2_EH === selectedCountry
 		);
 		if (!feature) return;
 

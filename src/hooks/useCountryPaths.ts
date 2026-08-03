@@ -14,7 +14,7 @@ interface GeoProperties {
 	ISO_A2_EH: string;
 }
 
-interface CountryFeature {
+export interface CountryFeature {
 	type: "Feature";
 	properties: GeoProperties;
 	geometry: Geometry;
