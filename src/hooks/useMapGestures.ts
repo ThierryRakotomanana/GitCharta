@@ -22,7 +22,8 @@ export function useMapGestures({
 
 	const onPointerDown = useCallback(
 		(e: React.PointerEvent) => {
-			if (!enabled) return;
+			if (!enabled || e.button !== 0) return;
+
 			didDragRef.current = false;
 			capturedRef.current = false;
 			startPosRef.current = { x: e.clientX, y: e.clientY };
