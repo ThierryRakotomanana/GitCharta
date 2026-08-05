@@ -284,7 +284,7 @@ export default function App() {
 							<div
 								ref={mapContainerRef}
 								className='flex-1 relative overflow-hidden'>
-								{size ?
+								{size && size.width > 0 && size.height > 0 ?
 									<WorldMap
 										mapMode={mapMode}
 										width={size.width}
