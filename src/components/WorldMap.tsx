@@ -66,7 +66,7 @@ export const WorldMap = ({
 		handleWheel
 	} = useMapZoom(1);
 
-	const { rotation, pan, isDragging, justDragged, dragHandlers } = useGlobeRotation(
+	const { rotation, pan, isDragging, didDrag, dragHandlers } = useGlobeRotation(
 		selectedCountry,
 		geoJson,
 		zoom,
@@ -226,7 +226,7 @@ export const WorldMap = ({
 									isSelected ? "stroke-[2px] stroke-primary" : "stroke-[0.05px]"
 								}`}
 								onClick={(e) => {
-									if (isDragging || justDragged()) {
+									if (didDrag()) {
 										e.stopPropagation();
 										return;
 									}
