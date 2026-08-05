@@ -66,7 +66,7 @@ export const WorldMap = ({
 		handleWheel
 	} = useMapZoom(1);
 
-	const { rotation, pan, isDragging, dragHandlers } = useGlobeRotation(
+	const { rotation, pan, isDragging, justDragged, dragHandlers } = useGlobeRotation(
 		selectedCountry,
 		geoJson,
 		zoom,
@@ -225,7 +225,13 @@ export const WorldMap = ({
 								className={`transition-[fill,stroke] duration-300 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none ${
 									isSelected ? "stroke-[2px] stroke-primary" : "stroke-[0.05px]"
 								}`}
-								onClick={() => setCountry(isSelected ? null : country.id)}
+								onClick={(e) => {
+									if (isDragging || justDragged()) {
+										e.stopPropagation();
+										return;
+									}
+									setCountry(isSelected ? null : country.id);
+								}}
 							/>
 						);
 					})}
