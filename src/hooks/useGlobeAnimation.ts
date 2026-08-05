@@ -8,9 +8,15 @@ export function useGlobeAnimation(
 	selectedCountry: string | null | undefined,
 	geoJson: WorldGeoJson | null,
 	isGlobe: boolean,
+	rotation: [number, number, number],
 	setRotation: React.Dispatch<React.SetStateAction<[number, number, number]>>
 ) {
 	const animationRef = useRef<number | null>(null);
+	const rotationRef = useRef(rotation);
+
+	useEffect(() => {
+		rotationRef.current = rotation;
+	});
 
 	const cancelAnimation = useCallback(() => {
 		if (animationRef.current !== null) {
@@ -36,11 +42,7 @@ export function useGlobeAnimation(
 			0
 		];
 
-		let startRotation: [number, number, number] = [0, 0, 0];
-		setRotation((prev) => {
-			startRotation = prev;
-			return prev;
-		});
+		const startRotation = rotationRef.current;
 
 		let dLambda = (targetRotation[0] - startRotation[0]) % 360;
 		if (dLambda < -180) dLambda += 360;

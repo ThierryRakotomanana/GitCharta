@@ -29,6 +29,7 @@ export function useGlobeRotation(
 		selectedCountry,
 		geoJson,
 		isGlobe,
+		rotation,
 		setRotation
 	);
 
