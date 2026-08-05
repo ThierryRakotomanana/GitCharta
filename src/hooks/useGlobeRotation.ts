@@ -3,6 +3,7 @@ import { geoCentroid } from "d3-geo";
 import type { CountryFeature, WorldGeoJson } from "@/hooks/useCountryPaths";
 import type { MAP_MODE } from "@/App";
 
+const DRAG_THRESHOLD_PX = 6;
 const BASE_DRAG_SENSITIVITY = 0.4;
 const ANIMATION_MS = 750;
 
@@ -14,39 +15,54 @@ export function useGlobeRotation(
 	width: number,
 	height: number
 ) {
+	const isGlobe = mapMode === "GLOBE";
+
 	const [rotation, setRotation] = useState<[number, number, number]>([0, 0, 0]);
 	const [pan, setPan] = useState<[number, number]>([0, 0]);
 	const [isDragging, setIsDragging] = useState(false);
 
 	const currentRotationRef = useRef(rotation);
+	const wasDraggingRef = useRef(false);
 	const dragStartRef = useRef<{
 		x: number;
 		y: number;
 		rot: [number, number, number];
 		pan: [number, number];
+		pointerId: number;
+		captured: boolean;
 	} | null>(null);
 	const animationRef = useRef<number | null>(null);
+
 	useEffect(() => {
 		currentRotationRef.current = rotation;
 	}, [rotation]);
+
+	useEffect(() => {
+		if (zoom <= 1) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect
+			setPan([0, 0]);
+		}
+	}, [zoom]);
+
 	const effectivePan: [number, number] = zoom <= 1 ? [0, 0] : pan;
 
 	const onPointerDown = useCallback(
 		(e: React.PointerEvent) => {
 			if (animationRef.current) cancelAnimationFrame(animationRef.current);
 
-			if (mapMode === "SPHERE" && zoom <= 1) return;
+			if (!isGlobe && zoom <= 1) return;
 
-			setIsDragging(true);
+			wasDraggingRef.current = false;
 			dragStartRef.current = {
 				x: e.clientX,
 				y: e.clientY,
 				rot: currentRotationRef.current,
-				pan: effectivePan
+				pan: effectivePan,
+				pointerId: e.pointerId,
+				captured: false
 			};
-			e.currentTarget.setPointerCapture(e.pointerId);
 		},
-		[mapMode, zoom, effectivePan]
+		[isGlobe, zoom, effectivePan]
 	);
 
 	const onPointerMove = useCallback(
@@ -56,15 +72,23 @@ export function useGlobeRotation(
 			const dx = e.clientX - dragStartRef.current.x;
 			const dy = e.clientY - dragStartRef.current.y;
 
-			if (mapMode === "SPHERE") {
-				const maxX = Math.max(0, (width * zoom - width) / 2);
-				const maxY = Math.max(0, (height * zoom - height) / 2);
+			if (!wasDraggingRef.current) {
+				if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
 
-				setPan([
-					Math.max(-maxX, Math.min(maxX, dragStartRef.current.pan[0] + dx)),
-					Math.max(-maxY, Math.min(maxY, dragStartRef.current.pan[1] + dy))
-				]);
-			} else {
+				wasDraggingRef.current = true;
+				setIsDragging(true);
+
+				if (!dragStartRef.current.captured && e.currentTarget.setPointerCapture) {
+					try {
+						e.currentTarget.setPointerCapture(e.pointerId);
+						dragStartRef.current.captured = true;
+					} catch {
+						// Edge case fallback
+					}
+				}
+			}
+
+			if (isGlobe) {
 				const sensitivity = BASE_DRAG_SENSITIVITY / zoom;
 				setRotation([
 					dragStartRef.current.rot[0] + dx * sensitivity,
@@ -74,26 +98,42 @@ export function useGlobeRotation(
 					),
 					0
 				]);
+			} else {
+				const maxX = Math.max(0, (width * zoom - width) / 2);
+				const maxY = Math.max(0, (height * zoom - height) / 2);
+
+				setPan([
+					Math.max(-maxX, Math.min(maxX, dragStartRef.current.pan[0] + dx)),
+					Math.max(-maxY, Math.min(maxY, dragStartRef.current.pan[1] + dy))
+				]);
 			}
 		},
-		[mapMode, zoom, width, height]
+		[isGlobe, zoom, width, height]
 	);
 
 	const onPointerUp = useCallback((e: React.PointerEvent) => {
-		if (dragStartRef.current) {
+		if (dragStartRef.current?.captured) {
 			try {
-				e.currentTarget.releasePointerCapture(e.pointerId);
+				if (
+					e.currentTarget.hasPointerCapture
+					&& e.currentTarget.hasPointerCapture(e.pointerId)
+				) {
+					e.currentTarget.releasePointerCapture(e.pointerId);
+				}
 			} catch (err) {
 				console.warn("Failed to release pointer capture:", err);
 			}
 		}
+
 		dragStartRef.current = null;
 		setIsDragging(false);
+		setTimeout(() => {
+			wasDraggingRef.current = false;
+		}, 100);
 	}, []);
 
 	useEffect(() => {
-		if (mapMode === "SPHERE") return;
-		if (!selectedCountry || !geoJson) return;
+		if (!isGlobe || !selectedCountry || !geoJson) return;
 
 		const feature = geoJson.features.find(
 			(f: CountryFeature) => f.properties.ISO_A2_EH === selectedCountry
@@ -137,12 +177,13 @@ export function useGlobeRotation(
 		return () => {
 			if (animationRef.current) cancelAnimationFrame(animationRef.current);
 		};
-	}, [selectedCountry, geoJson, mapMode]);
+	}, [selectedCountry, geoJson, isGlobe]);
 
 	return {
 		rotation,
 		pan: effectivePan,
 		isDragging,
+		justDragged: () => wasDraggingRef.current,
 		dragHandlers: {
 			onPointerDown,
 			onPointerMove,
