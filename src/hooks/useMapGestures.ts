@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 const DRAG_THRESHOLD_PX = 6;
 
@@ -19,29 +19,15 @@ export function useMapGestures({
 	const didDragRef = useRef(false);
 	const startPosRef = useRef<{ x: number; y: number } | null>(null);
 	const capturedRef = useRef(false);
-	const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-	const clearResetTimer = useCallback(() => {
-		if (resetTimerRef.current !== null) {
-			clearTimeout(resetTimerRef.current);
-			resetTimerRef.current = null;
-		}
-	}, []);
-
-	useEffect(() => {
-		return () => clearResetTimer();
-	}, [clearResetTimer]);
 
 	const onPointerDown = useCallback(
 		(e: React.PointerEvent) => {
 			if (!enabled) return;
-
-			clearResetTimer();
 			didDragRef.current = false;
 			capturedRef.current = false;
 			startPosRef.current = { x: e.clientX, y: e.clientY };
 		},
-		[enabled, clearResetTimer]
+		[enabled]
 	);
 
 	const onPointerMove = useCallback(
@@ -89,19 +75,21 @@ export function useMapGestures({
 				}
 				if (didDragRef.current) {
 					onDragEnd?.();
-
-					clearResetTimer();
-					resetTimerRef.current = setTimeout(() => {
-						didDragRef.current = false;
-					}, 0);
 				}
 			}
-
 			startPosRef.current = null;
 			setIsDragging(false);
 		},
-		[onDragEnd, clearResetTimer]
+		[onDragEnd]
 	);
+
+	const onClickCapture = useCallback((e: React.MouseEvent) => {
+		if (didDragRef.current) {
+			e.stopPropagation();
+			e.preventDefault();
+			didDragRef.current = false;
+		}
+	}, []);
 
 	return {
 		isDragging,
@@ -111,7 +99,8 @@ export function useMapGestures({
 			onPointerMove,
 			onPointerUp,
 			onPointerLeave: onPointerUp,
-			onPointerCancel: onPointerUp
+			onPointerCancel: onPointerUp,
+			onClickCapture
 		}
 	};
 }

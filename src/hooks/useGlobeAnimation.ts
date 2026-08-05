@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { geoCentroid } from "d3-geo";
 import type { CountryFeature, WorldGeoJson } from "@/hooks/useCountryPaths";
 
@@ -14,9 +14,9 @@ export function useGlobeAnimation(
 	const animationRef = useRef<number | null>(null);
 	const rotationRef = useRef(rotation);
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		rotationRef.current = rotation;
-	});
+	}, [rotation]);
 
 	const cancelAnimation = useCallback(() => {
 		if (animationRef.current !== null) {
