@@ -95,7 +95,7 @@ export const WorldMap = ({
 	}, [mapPaths, selectedCountry]);
 
 	const stats = useMapStats(audience, profilesByCountry);
-	const [isCollapsed, setIsCollapsed] = useState(true);
+	const [isCollapsed, setIsCollapsed] = useState(!selectedCountry);
 	const safeFilename = `${user?.login.toLowerCase()}-${mapTypeLabel.toLowerCase().replace(/\s+/g, "-")}-map.png`;
 
 	const { exportRef, handleExport, isExporting, justExported } = useMapSnapshot({
