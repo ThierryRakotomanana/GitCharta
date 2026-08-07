@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import type {
 	GithubUserProfile,
 	LocalizedGithubProfile
@@ -6,7 +6,7 @@ import type {
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
 import { Button } from "@/components/ui/button";
-import { Camera, Check, X } from "lucide-react";
+import { Camera, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { useMapStats } from "@/hooks/useMapStats";
 import { useMapSnapshot } from "@/hooks/useMapSnapshot";
 import { useCountryPaths, type WorldGeoJson } from "@/hooks/useCountryPaths";
@@ -14,7 +14,6 @@ import { useHeatScale } from "@/hooks/useHeatScale";
 import { useProfilesByCountry } from "@/hooks/useProfilesByCountry";
 import { getRegionName } from "@/lib/region";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card } from "@/components/ui/card";
 import { useGlobeRotation } from "@/hooks/useGlobeRotation";
 import type { MAP_MODE } from "@/App";
 import { useMapZoom } from "@/hooks/useMapZoom";
@@ -86,6 +85,7 @@ export const WorldMap = ({
 	);
 
 	const stats = useMapStats(audience, profilesByCountry);
+	const [isCollapsed, setIsCollapsed] = useState(true);
 	const safeFilename = `${user?.login.toLowerCase()}-${mapTypeLabel.toLowerCase().replace(/\s+/g, "-")}-map.png`;
 
 	const { exportRef, handleExport, isExporting, justExported } = useMapSnapshot({
@@ -141,6 +141,8 @@ export const WorldMap = ({
 		!isInteractive ? "cursor-default"
 		: isDragging ? "cursor-grabbing"
 		: "cursor-grab";
+
+	const totalNetwork = audience.length;
 
 	return (
 		<div
@@ -250,85 +252,141 @@ export const WorldMap = ({
 				/>
 			</div>
 
-			<div className='absolute bottom-3 left-3 sm:bottom-6 sm:left-6 z-10 pointer-events-none'>
-				<Card className='flex flex-col gap-2 p-3.5 bg-card/85 backdrop-blur-md border-border/50 shadow-lg min-w-55 pointer-events-auto transition-all duration-200'>
-					<div className='flex items-center gap-2 pointer-events-none'>
-						<Avatar className='h-10 w-10 border-2 border-primary/20 shadow-sm bg-card'>
-							<AvatarImage src={user?.avatarUrl} crossOrigin='anonymous' />
-						</Avatar>
-						<div className='flex flex-col px-2 py-0.5 rounded-md'>
-							<h2 className='text-[10px] font-bold capitalize tracking-wider '>
-								{user?.name}'s {mapTypeLabel}
-							</h2>
+			<div className='absolute bottom-4 left-4 sm:left-6 sm:translate-x-0 sm:bottom-6 z-20 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-auto w-[90%] max-w-[320px] sm:w-80'>
+				<div className='flex flex-col bg-card/95 backdrop-blur-xl ring-1 ring-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full rounded-2xl overflow-hidden transition-all duration-300'>
+					<button
+						onClick={() => setIsCollapsed(!isCollapsed)}
+						className='w-full flex items-center justify-between px-3.5 py-2.5 sm:px-4 sm:py-3.5 bg-transparent cursor-pointer hover:bg-muted/30 transition-colors group text-left outline-none'>
+						<div className='flex items-center gap-2.5 overflow-hidden'>
+							<div
+								className={`h-2 w-2 rounded-full shrink-0 ${selectedCountryStats ? "bg-primary" : "bg-muted-foreground"}`}
+							/>
+							<h3 className='text-xs sm:text-sm font-medium text-foreground truncate'>
+								{selectedCountryStats ?
+									selectedCountryStats.name
+								:	"Global Overview"}
+							</h3>
+						</div>
+						<div className='flex items-center gap-3 shrink-0'>
+							<span className='text-base sm:text-lg font-semibold tabular-nums tracking-tight text-foreground'>
+								{selectedCountryStats ? selectedCountryStats.count : totalNetwork}
+							</span>
+							<div className='text-muted-foreground group-hover:text-foreground transition-colors'>
+								{isCollapsed ?
+									<ChevronUp className='h-4 w-4' />
+								:	<ChevronDown className='h-4 w-4' />}
+							</div>
+						</div>
+					</button>
+
+					<div
+						className={`grid transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+							isCollapsed ?
+								"grid-rows-[0fr] opacity-0"
+							:	"grid-rows-[1fr] opacity-100"
+						}`}>
+						<div className='overflow-hidden'>
+							<div className='px-3.5 pb-3.5 pt-1 sm:px-4 sm:pb-4 sm:pt-1 flex flex-col gap-3 sm:gap-4 text-xs sm:text-sm'>
+								<div className='h-px w-full bg-border/40' />
+
+								{selectedCountryStats ?
+									<div className='flex flex-col gap-3'>
+										<div className='flex items-end justify-between'>
+											<div className='flex flex-col gap-0.5 sm:gap-1'>
+												<span className='text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground font-medium'>
+													Share of {mapTypeLabel}
+												</span>
+												<span className='text-xs sm:text-sm text-foreground tabular-nums'>
+													{selectedCountryStats.pctOfTotal}% of network
+												</span>
+											</div>
+
+											{selectedCountryStats.topProfiles.length > 0 && (
+												<div className='flex -space-x-1.5 sm:-space-x-2'>
+													{selectedCountryStats.topProfiles
+														.slice(0, 3)
+														.map((profile) => (
+															<Avatar
+																key={profile.id}
+																className='inline-block h-7 w-7 sm:h-8 sm:w-8 rounded-full ring-2 ring-card'>
+																<AvatarImage
+																	src={profile.avatarUrl}
+																	crossOrigin='anonymous'
+																/>
+																<AvatarFallback className='text-[9px] sm:text-[10px] bg-muted text-muted-foreground'>
+																	{profile.login.slice(0, 2).toUpperCase()}
+																</AvatarFallback>
+															</Avatar>
+														))}
+												</div>
+											)}
+										</div>
+
+										<div className='flex items-center justify-between pt-1.5 sm:pt-2 mt-0.5 border-t border-border/30'>
+											<span className='text-[9px] sm:text-[10px] text-muted-foreground/75 truncate pr-2'>
+												Origin: {user?.login}
+											</span>
+											<button
+												onClick={(e) => {
+													e.stopPropagation();
+													setCountry(null);
+												}}
+												className='text-[10px] sm:text-[11px] font-medium text-muted-foreground hover:text-destructive transition-colors px-1.5 py-0.5 -mr-1 rounded-md hover:bg-destructive/10 shrink-0'>
+												Clear Selection
+											</button>
+										</div>
+									</div>
+								:	<div className='flex flex-col gap-3'>
+										<div className='flex items-end justify-between'>
+											<div className='flex flex-col gap-0.5 sm:gap-1'>
+												<span className='text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground font-medium'>
+													Highest Density
+												</span>
+												<span className='text-xs sm:text-sm text-foreground font-medium truncate max-w-35'>
+													{stats.topCountryName}
+												</span>
+											</div>
+											<div className='flex flex-col gap-0.5 sm:gap-1 text-right'>
+												<span className='text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground font-medium'>
+													Concentration
+												</span>
+												<span className='text-xs sm:text-sm text-foreground tabular-nums'>
+													{stats.topCountryPct}% of total
+												</span>
+											</div>
+										</div>
+
+										<div className='flex flex-col gap-1.5 pt-1 sm:pt-2'>
+											<div className='flex items-center justify-between text-[9px] sm:text-[10px] uppercase tracking-widest font-medium'>
+												<span className='text-primary'>
+													Located: {stats.coveragePct}%
+												</span>
+												<span className='text-muted-foreground'>
+													Unknown: {stats.unlocatedPct}%
+												</span>
+											</div>
+											<div className='h-1.5 w-full bg-muted rounded-full overflow-hidden flex'>
+												<div
+													className='h-full bg-primary transition-all duration-1000 ease-out'
+													style={{ width: `${stats.coveragePct}%` }}
+												/>
+											</div>
+										</div>
+
+										<div className='flex items-center justify-between pt-1.5 sm:pt-2 mt-0.5 border-t border-border/30'>
+											<span className='text-[9px] sm:text-[10px] text-muted-foreground/75 truncate'>
+												Mapping {mapTypeLabel} for {user?.login}
+											</span>
+											<span className='text-[9px] sm:text-[10px] font-mono text-muted-foreground/50'>
+												n={totalNetwork}
+											</span>
+										</div>
+									</div>
+								}
+							</div>
 						</div>
 					</div>
-					<div className='h-px bg-border/50 w-full' />
-					{selectedCountryStats ?
-						<div>
-							<div className='flex items-center justify-between gap-2 mb-1'>
-								<span className='text-[10px] font-bold uppercase tracking-wider text-primary'>
-									Region Overview
-								</span>
-								<button
-									onClick={() => setCountry(null)}
-									className='text-muted-foreground hover:text-foreground rounded-sm p-0.5 cursor-pointer'>
-									<X className='h-3.5 w-3.5' />
-								</button>
-							</div>
-							<div className='text-sm font-bold text-foreground'>
-								{selectedCountryStats.name}
-							</div>
-							<div className='mt-1 flex items-baseline gap-1.5'>
-								<span className='text-xl font-extrabold text-foreground'>
-									{selectedCountryStats.count}
-								</span>
-								<span className='text-xs text-muted-foreground'>
-									person{selectedCountryStats.count !== 1 ? "s" : ""} (
-									{selectedCountryStats.pctOfTotal}%)
-								</span>
-							</div>
-							{selectedCountryStats.topProfiles.length > 0 && (
-								<div className='mt-2.5 pt-2 border-t border-border/40 flex items-center gap-1.5'>
-									<span className='text-[10px] text-muted-foreground'>
-										Network:
-									</span>
-									<div className='flex -space-x-1.5 overflow-hidden'>
-										{selectedCountryStats.topProfiles.map((profile) => (
-											<Avatar
-												key={profile.id}
-												className='inline-block h-5 w-5 rounded-full ring-1 ring-background'>
-												<AvatarImage
-													src={profile.avatarUrl}
-													crossOrigin='anonymous'
-												/>
-												<AvatarFallback className='text-[8px]'>
-													{profile.login.slice(0, 2).toUpperCase()}
-												</AvatarFallback>
-											</Avatar>
-										))}
-									</div>
-								</div>
-							)}
-						</div>
-					:	<div>
-							<div className='text-[10px] font-bold uppercase tracking-wider text-primary mb-1'>
-								Global Footprint
-							</div>
-							<div>
-								<div className='text-sm font-semibold text-foreground'>
-									Top: {stats.topCountryName}
-								</div>
-								<div className='text-xs text-muted-foreground'>
-									{stats.topCountryPct}% of total audience
-								</div>
-							</div>
-							<div className='h-px bg-border/50 w-full my-2' />
-							<div className='text-xs font-medium text-foreground'>
-								{stats.coveragePct}% mapped location
-							</div>
-						</div>
-					}
-				</Card>
+				</div>
 			</div>
 
 			<div className='absolute top-4 sm:top-6 right-4 sm:right-6 z-20 exclude-from-export'>
