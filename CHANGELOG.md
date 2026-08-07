@@ -1,3 +1,31 @@
+## 1.0.0
+
+### Major Changes
+
+- feat: will add stargazers, forks and prs section [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#39](https://github.com/ThierryRakotomanana/GitCharta/pull/39)]
+  After it's first exposure, we received many feedback from differents person, everyone asked a map for `Stargazers` and we think it could be extend to `Forks` and why not `PRs` also
+
+### Minor Changes
+
+- refactor(useGlobeRotation): split it into three distinctive separation of concern, and avoid re-inventing features already provide by d3 [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#58](https://github.com/ThierryRakotomanana/GitCharta/pull/58)]
+
+- feat(worldmap): add globe rotation and interactive dragging logic [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#47](https://github.com/ThierryRakotomanana/GitCharta/pull/47)]
+  Add interactive drag rotation and auto-centering to the 3D globe, powered by a new `useGlobeRotation` custom hook.
+
+- feat: add smooth transition between the two projection(2D and 3D) [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#47](https://github.com/ThierryRakotomanana/GitCharta/pull/47)]
+
+- refactor: replace custom canvas snapshot with html-to-image library [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#46](https://github.com/ThierryRakotomanana/GitCharta/pull/46)]
+
+- feat(zoom): Introduce 2D Map Zooming, Panning, and Interaction Refactoring [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#49](https://github.com/ThierryRakotomanana/GitCharta/pull/49)]
+
+- refactor: extract the path generator into a custom hooks [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#44](https://github.com/ThierryRakotomanana/GitCharta/pull/44)]
+
+### Patch Changes
+
+- fix: decouple position from visibility & capture on drag, not on down [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#48](https://github.com/ThierryRakotomanana/GitCharta/pull/48)]
+
+- fix: the issue where dragging or rotating the map accidentally toggled country selection upon pointer release, and resolves broken country click interactions caused by eager DOM pointer capture. [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#57](https://github.com/ThierryRakotomanana/GitCharta/pull/57)]
+
 ## 0.2.0
 
 ### Minor Changes
