@@ -128,7 +128,7 @@ export function CountryList({
 			<div className='flex items-center justify-between gap-2'>
 				{country ?
 					<div
-						className='flex items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-2'
+						className='flex w-full items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-2'
 						style={
 							isUnknownSelected ? undefined : (
 								{ background: `${getCountryColor(country)}20` }
@@ -144,7 +144,7 @@ export function CountryList({
 								className='h-5 w-7 shrink-0 rounded-sm border border-border/40'
 							/>
 						}
-						<div className='min-w-0 flex items-center sm:flex-col gap-2'>
+						<div className='min-w-0 flex items-center gap-2'>
 							<button
 								type='button'
 								onClick={() => setCountry(null)}
@@ -243,31 +243,33 @@ export function CountryList({
 										<button
 											type='button'
 											onClick={() => setCountry(code)}
-											className='group relative flex h-full w-full items-center justify-between overflow-hidden rounded-lg border border-transparent bg-card/50 px-3 py-2 text-left text-sm transition-all hover:bg-muted/60 hover:border-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'>
+											className='group relative flex h-full w-full items-center justify-between rounded-md px-3 py-3 text-left transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'>
 											<span
 												aria-hidden
-												className='absolute inset-y-0 left-0 bg-primary/10 transition-all group-hover:bg-primary/15'
+												className='absolute inset-y-0 left-0 bg-primary/10 transition-all group-hover:bg-primary/20 rounded-md'
 												style={{
 													width: `${(profiles.length / maxCount) * 100}%`
 												}}
 											/>
+
 											<span className='relative z-10 flex min-w-0 items-center gap-3'>
 												<RegionIcon
 													code={code}
-													className='h-4 w-6 shrink-0 rounded-sm border border-border/40'
+													className='h-5 w-7 shrink-0 rounded-sm border border-border/50'
 												/>
-												<span className='flex min-w-0 flex-col'>
-													<span className='truncate font-medium text-foreground'>
+												<span className='flex min-w-0 flex-col gap-0.5'>
+													<span className='truncate text-sm font-medium'>
 														{getRegionName(code)}
 													</span>
-													<span className='text-xs font-mono text-muted-foreground'>
+													<span className='text-xs text-muted-foreground'>
 														{formatPercentage(profiles.length, totalFollowers)}
 													</span>
 												</span>
 											</span>
+
 											<Badge
 												variant='secondary'
-												className='relative z-10 shrink-0 font-mono text-xs'>
+												className='relative z-10 shrink-0 text-xs bg-background/50 backdrop-blur-sm'>
 												{profiles.length}
 											</Badge>
 										</button>
