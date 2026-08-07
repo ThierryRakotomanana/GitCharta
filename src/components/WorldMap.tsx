@@ -86,6 +86,14 @@ export const WorldMap = ({
 		zoom
 	);
 
+	const sortedMapPaths = useMemo(() => {
+		return [...mapPaths].sort((a, b) => {
+			if (a.id === selectedCountry) return 1;
+			if (b.id === selectedCountry) return -1;
+			return 0;
+		});
+	}, [mapPaths, selectedCountry]);
+
 	const stats = useMapStats(audience, profilesByCountry);
 	const [isCollapsed, setIsCollapsed] = useState(true);
 	const safeFilename = `${user?.login.toLowerCase()}-${mapTypeLabel.toLowerCase().replace(/\s+/g, "-")}-map.png`;
@@ -204,7 +212,7 @@ export const WorldMap = ({
 					/>
 				</g>
 				<g>
-					{mapPaths.map((country) => {
+					{sortedMapPaths.map((country) => {
 						const count = profilesByCountry.get(country.id)?.length ?? 0;
 						const hasData = count > 0;
 						const isSelected =
@@ -226,11 +234,10 @@ export const WorldMap = ({
 									opacity: country.opacity,
 									pointerEvents: country.opacity < 0.1 ? "none" : "auto"
 								}}
-								className={`transition-[fill,stroke] duration-200 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none ${
-									isSelected ?
-										"stroke-[1.5px] stroke-primary fill-primary/80 z-10"
-									:	"stroke-[0.1px] stroke-muted hover:stroke-[1px] hover:stroke-primary hover:brightness-125"
-								}`}
+								className={
+									"transition-[fill,stroke] duration-300 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none "
+									+ (isSelected ? "stroke-[2px] stroke-primary" : "stroke-[0.05px]")
+								}
 								onClick={(e) => {
 									if (didDrag()) {
 										e.stopPropagation();
@@ -267,7 +274,7 @@ export const WorldMap = ({
 									isoCode={selectedCountryStats?.id}
 									className='h-5 w-7 shrink-0 rounded-sm border border-border/40'
 								/>
-							:	<div className={`h-2 w-2 rounded-full shrink-0 "bg-primary`} />}
+							:	<div className={`h-2 w-2 rounded-full shrink-0 bg-primary`} />}
 
 							<h3 className='text-xs sm:text-sm font-medium text-foreground truncate'>
 								{selectedCountryStats ?
