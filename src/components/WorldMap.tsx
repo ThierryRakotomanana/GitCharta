@@ -18,6 +18,7 @@ import { useGlobeRotation } from "@/hooks/useGlobeRotation";
 import type { MAP_MODE } from "@/App";
 import { useMapZoom } from "@/hooks/useMapZoom";
 import { ZoomControls } from "@/components/ZoomControls";
+import { CountryFlag } from "@/components/CountryFlag";
 
 export interface WorldMapProps {
 	width: number;
@@ -260,9 +261,13 @@ export const WorldMap = ({
 						onClick={() => setIsCollapsed(!isCollapsed)}
 						className='w-full flex items-center justify-between px-3.5 py-2.5 sm:px-4 sm:py-3.5 bg-transparent cursor-pointer hover:bg-muted/30 transition-colors group text-left outline-none'>
 						<div className='flex items-center gap-2.5 overflow-hidden'>
-							<div
-								className={`h-2 w-2 rounded-full shrink-0 ${selectedCountryStats ? "bg-primary" : "bg-muted-foreground"}`}
-							/>
+							{selectedCountryStats ?
+								<CountryFlag
+									isoCode={selectedCountryStats?.id}
+									className='h-5 w-7 shrink-0 rounded-sm border border-border/40'
+								/>
+							:	<div className={`h-2 w-2 rounded-full shrink-0 "bg-primary`} />}
+
 							<h3 className='text-xs sm:text-sm font-medium text-foreground truncate'>
 								{selectedCountryStats ?
 									selectedCountryStats.name
