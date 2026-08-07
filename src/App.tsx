@@ -362,7 +362,7 @@ export default function App() {
 				)}
 			</main>
 
-			<footer className='h-10 w-full border-t border-border bg-muted/40 px-4 sm:px-6 flex items-center justify-between text-xs text-muted-foreground shrink-0'>
+			<footer className='hidden sm:flex h-10 w-full border-t border-border bg-muted/40 px-4 sm:px-6 items-center justify-between text-xs text-muted-foreground shrink-0'>
 				<p>© 2026 GitCharta</p>
 				<div className='flex gap-4'>
 					<a href='#' className='hover:underline'>
