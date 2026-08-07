@@ -224,8 +224,10 @@ export const WorldMap = ({
 									opacity: country.opacity,
 									pointerEvents: country.opacity < 0.1 ? "none" : "auto"
 								}}
-								className={`transition-[fill,stroke] duration-300 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none ${
-									isSelected ? "stroke-[2px] stroke-primary" : "stroke-[0.05px]"
+								className={`transition-[fill,stroke] duration-200 ease-in-out cursor-pointer stroke-accent-foreground hover:stroke-[1.5px] hover:brightness-110 focus:outline-none ${
+									isSelected ?
+										"stroke-[1.5px] stroke-primary fill-primary/80 z-10"
+									:	"stroke-[0.1px] stroke-muted hover:stroke-[1px] hover:stroke-primary hover:brightness-125"
 								}`}
 								onClick={(e) => {
 									if (didDrag()) {
