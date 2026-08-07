@@ -19,6 +19,7 @@ import type { MAP_MODE } from "@/App";
 import { useMapZoom } from "@/hooks/useMapZoom";
 import { ZoomControls } from "@/components/ZoomControls";
 import { CountryFlag } from "@/components/CountryFlag";
+import { Badge } from "@/components/ui/badge";
 
 export interface WorldMapProps {
 	width: number;
@@ -275,9 +276,9 @@ export const WorldMap = ({
 							</h3>
 						</div>
 						<div className='flex items-center gap-3 shrink-0'>
-							<span className='text-base sm:text-lg font-semibold tabular-nums tracking-tight text-foreground'>
+							<Badge>
 								{selectedCountryStats ? selectedCountryStats.count : totalNetwork}
-							</span>
+							</Badge>
 							<div className='text-muted-foreground group-hover:text-foreground transition-colors'>
 								{isCollapsed ?
 									<ChevronUp className='h-4 w-4' />
