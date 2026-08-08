@@ -5,7 +5,6 @@ import type {
 } from "@/api/graphql.types";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
-import { Button } from "@/components/ui/button";
 import { Camera, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { useMapStats } from "@/hooks/useMapStats";
 import { useMapSnapshot } from "@/hooks/useMapSnapshot";
@@ -15,11 +14,12 @@ import { useProfilesByCountry } from "@/hooks/useProfilesByCountry";
 import { getRegionName } from "@/lib/region";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useGlobeRotation } from "@/hooks/useGlobeRotation";
-import type { MAP_MODE } from "@/App";
 import { useMapZoom } from "@/hooks/useMapZoom";
 import { ZoomControls } from "@/components/ZoomControls";
 import { CountryFlag } from "@/components/CountryFlag";
 import { Badge } from "@/components/ui/badge";
+
+type MAP_MODE = "GLOBE" | "SPHERE";
 
 export interface WorldMapProps {
 	width: number;
@@ -28,8 +28,8 @@ export interface WorldMapProps {
 	audience: LocalizedGithubProfile[];
 	selectedCountry?: string | null;
 	user: GithubUserProfile | null;
+	isMobile: boolean;
 	mapTypeLabel?: string;
-	mapMode: MAP_MODE;
 }
 
 export const WorldMap = ({
@@ -39,9 +39,10 @@ export const WorldMap = ({
 	audience,
 	selectedCountry = null,
 	user,
-	mapTypeLabel = "Network",
-	mapMode
+	isMobile,
+	mapTypeLabel = "Network"
 }: WorldMapProps) => {
+	const [mapMode, setMapMode] = useState<MAP_MODE>(isMobile ? "GLOBE" : "SPHERE");
 	const url =
 		"https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson";
 
@@ -250,7 +251,26 @@ export const WorldMap = ({
 					})}
 				</g>
 			</svg>
-			<div className='absolute bottom-20 right-4 sm:right-6 z-20 exclude-from-export'>
+			<div className='absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 flex flex-col bg-card/85 backdrop-blur-md border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-lg overflow-hidden exclude-from-export'>
+				<div className='flex flex-col'>
+					<button
+						onClick={() => setMapMode("GLOBE")}
+						className={`px-3 py-2.5 transition-colors focus:outline-none ${mapMode === "GLOBE" ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-muted-foreground"}`}>
+						<span className='text-[10px] font-bold uppercase tracking-widest'>
+							3D
+						</span>
+					</button>
+					<div className='h-px w-full bg-border/40' />
+					<button
+						onClick={() => setMapMode("SPHERE")}
+						className={`px-3 py-2.5 transition-colors focus:outline-none ${mapMode === "SPHERE" ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-muted-foreground"}`}>
+						<span className='text-[10px] font-bold uppercase tracking-widest'>
+							2D
+						</span>
+					</button>
+				</div>
+
+				<div className='h-px w-full bg-border/60' />
 				<ZoomControls
 					zoomIn={zoomIn}
 					zoomOut={zoomOut}
@@ -260,6 +280,20 @@ export const WorldMap = ({
 					isZoomed={isZoomed}
 					zoom={zoom}
 				/>
+
+				<div className='h-px w-full bg-border/60' />
+				<button
+					onClick={handleExport}
+					disabled={isExporting}
+					title='Save snapshot'
+					className='px-3 py-2.5 hover:bg-muted/50 transition-colors focus:outline-none group disabled:opacity-50'>
+					{justExported ?
+						<Check className='h-4 w-4 text-primary' />
+					:	<Camera
+							className={`h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors ${isExporting ? "animate-pulse" : ""}`}
+						/>
+					}
+				</button>
 			</div>
 			<div className='absolute bottom-4 left-4 sm:left-6 sm:translate-x-0 sm:bottom-6 z-20 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-auto w-[calc(100vw-5rem)] max-w-[320px] sm:w-80'>
 				<div className='flex flex-col bg-card/95 backdrop-blur-xl ring-1 ring-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full rounded-2xl overflow-hidden transition-all duration-300'>
@@ -400,20 +434,6 @@ export const WorldMap = ({
 						</div>
 					</div>
 				</div>
-			</div>
-			<div className='absolute top-4 sm:top-6 right-4 sm:right-6 z-20 exclude-from-export'>
-				<Button
-					type='button'
-					size='icon'
-					variant='secondary'
-					onClick={handleExport}
-					disabled={isExporting}
-					title='Save snapshot'
-					className='h-10 w-10 sm:h-9 sm:w-9 bg-card border border-border shadow-sm cursor-pointer'>
-					{justExported ?
-						<Check className='h-4 w-4 text-primary' />
-					:	<Camera className={`h-4 w-4 ${isExporting ? "animate-pulse" : ""}`} />}
-				</Button>
 			</div>
 		</div>
 	);
