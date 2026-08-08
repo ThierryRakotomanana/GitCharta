@@ -39,27 +39,22 @@ const AUDIENCE_TABS: { value: AudienceType; label: string; noun: string }[] = [
 	{ value: "ghosts", label: "Ghost Zone", noun: "ghost" }
 ];
 
-export type MAP_MODE = "GLOBE" | "SPHERE";
-
 type AppState = {
 	country: string | null;
 	audienceType: AudienceType;
 	credentials: Credentials;
-	mapMode: MAP_MODE;
 };
 
 type AppAction =
 	| { type: "SET_COUNTRY"; payload: string | null }
 	| { type: "SET_AUDIENCE_TYPE"; payload: AudienceType }
 	| { type: "SET_CREDENTIALS"; payload: Credentials }
-	| { type: "RESET_USER" }
-	| { type: "SET_MODE"; payload: MAP_MODE };
+	| { type: "RESET_USER" };
 
 const initialState: AppState = {
 	country: null,
 	audienceType: "followers",
-	credentials: { user: "", token: "" },
-	mapMode: "SPHERE"
+	credentials: { user: "", token: "" }
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -70,8 +65,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
 			return { ...state, audienceType: action.payload, country: null };
 		case "SET_CREDENTIALS":
 			return { ...state, credentials: action.payload };
-		case "SET_MODE":
-			return { ...state, mapMode: action.payload };
 		case "RESET_USER":
 			return initialState;
 		default:
@@ -80,7 +73,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 }
 
 export default function App() {
-	const [{ country, audienceType, credentials, mapMode }, dispatch] = useReducer(
+	const [{ country, audienceType, credentials }, dispatch] = useReducer(
 		appReducer,
 		initialState
 	);
@@ -314,28 +307,15 @@ export default function App() {
 									</TabsList>
 								</Tabs>
 							</div>
-
-							<div className='absolute bottom-6 right-3 sm:right-20 z-20'>
-								<Tabs
-									value={mapMode}
-									onValueChange={(v) =>
-										dispatch({ type: "SET_MODE", payload: v as MAP_MODE })
-									}>
-									<TabsList className='bg-background/80 backdrop-blur-md border border-border shadow-lg'>
-										<TabsTrigger value='SPHERE'>2D</TabsTrigger>
-										<TabsTrigger value='GLOBE'>3D</TabsTrigger>
-									</TabsList>
-								</Tabs>
-							</div>
 							{size && size.width > 0 && size.height > 0 ?
 								<WorldMap
-									mapMode={mapMode}
 									width={size.width}
 									height={size.height}
 									setCountry={setCountry}
 									audience={currentAudience}
 									selectedCountry={country}
 									user={user}
+									isMobile={isMobile}
 									mapTypeLabel={
 										AUDIENCE_TABS.find((t) => t.value === audienceType)?.label
 										|| "Network"
