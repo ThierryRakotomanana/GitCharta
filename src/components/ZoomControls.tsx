@@ -44,6 +44,7 @@ export const ZoomControls = ({
 			</button>
 
 			<div
+				aria-hidden={!isZoomed}
 				className={`grid transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
 					isZoomed ?
 						"grid-rows-[1fr] opacity-100"
