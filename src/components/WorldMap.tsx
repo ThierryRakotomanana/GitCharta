@@ -300,9 +300,7 @@ export const WorldMap = ({
 					}
 				</button>
 			</div>
-			<div
-				key={selectedCountry ?? "global-overview"}
-				className='absolute bottom-4 right-3 sm:right-auto sm:left-20 sm:bottom-6 z-20 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-auto w-[calc(100vw-4.5rem)] max-w-[320px] sm:w-80'>
+			<div className='absolute bottom-4 right-3 sm:right-auto sm:left-20 sm:bottom-6 z-20 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-auto w-[calc(100vw-4.5rem)] max-w-[320px] sm:w-80'>
 				<div className='flex flex-col bg-card/95 backdrop-blur-xl ring-1 ring-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full rounded-2xl overflow-hidden transition-all duration-300'>
 					<button
 						onClick={() => setIsCollapsed(!isCollapsed)}
