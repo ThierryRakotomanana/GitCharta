@@ -19,7 +19,7 @@ import { ZoomControls } from "@/components/ZoomControls";
 import { CountryFlag } from "@/components/CountryFlag";
 import { Badge } from "@/components/ui/badge";
 
-type MAP_MODE = "GLOBE" | "SPHERE";
+export type MAP_MODE = "GLOBE" | "SPHERE";
 
 export interface WorldMapProps {
 	width: number;

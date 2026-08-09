@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import type { WorldGeoJson } from "@/hooks/useCountryPaths";
-import type { MAP_MODE } from "@/App";
 import { useMapGestures } from "@/hooks/useMapGestures";
 import { useGlobeAnimation } from "@/hooks/useGlobeAnimation";
+import type { MAP_MODE } from "@/components/WorldMap";
 
 const BASE_DRAG_SENSITIVITY = 0.4;
 
