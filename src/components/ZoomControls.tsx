@@ -27,7 +27,7 @@ export const ZoomControls = ({
 				disabled={!canZoomIn}
 				aria-label='Zoom in'
 				title='Zoom in'
-				className='px-3 py-2.5 flex items-center justify-center hover:bg-muted/50 transition-colors focus:outline-none group disabled:opacity-50'>
+				className='p-2.5 flex items-center justify-center hover:bg-muted/50 transition-colors focus:outline-none group disabled:opacity-50'>
 				<Plus className='h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors' />
 			</button>
 
@@ -39,7 +39,7 @@ export const ZoomControls = ({
 				disabled={!canZoomOut}
 				aria-label='Zoom out'
 				title='Zoom out'
-				className='px-3 py-2.5 flex items-center justify-center hover:bg-muted/50 transition-colors focus:outline-none group disabled:opacity-50'>
+				className='p-2.5 flex items-center justify-center hover:bg-muted/50 transition-colors focus:outline-none group disabled:opacity-50'>
 				<Minus className='h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors' />
 			</button>
 
@@ -51,7 +51,7 @@ export const ZoomControls = ({
 						onClick={resetZoom}
 						aria-label='Reset zoom'
 						title='Reset zoom'
-						className='px-3 py-2 flex flex-col items-center gap-1 hover:bg-muted/50 transition-colors focus:outline-none group'>
+						className='p-2 flex flex-col items-center gap-1 hover:bg-muted/50 transition-colors focus:outline-none group'>
 						<RotateCcw className='h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors' />
 						<span className='text-[9px] font-mono font-medium text-muted-foreground group-hover:text-primary transition-colors'>
 							{Math.round(zoom * 100)}%
