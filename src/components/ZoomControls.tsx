@@ -43,22 +43,29 @@ export const ZoomControls = ({
 				<Minus className='h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors' />
 			</button>
 
-			{isZoomed && (
-				<>
+			<div
+				aria-hidden={!isZoomed}
+				className={`grid transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+					isZoomed ?
+						"grid-rows-[1fr] opacity-100"
+					:	"grid-rows-[0fr] opacity-0 pointer-events-none"
+				}`}>
+				<div className='overflow-hidden flex flex-col w-full'>
 					<div className='h-px w-full bg-border/40' />
 					<button
 						type='button'
 						onClick={resetZoom}
+						tabIndex={isZoomed ? 0 : -1}
 						aria-label='Reset zoom'
 						title='Reset zoom'
-						className='p-2 flex flex-col items-center gap-1 hover:bg-muted/50 transition-colors focus:outline-none group'>
+						className='px-3 py-2 flex flex-col items-center gap-1 hover:bg-muted/50 transition-colors focus:outline-none group'>
 						<RotateCcw className='h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors' />
 						<span className='text-[9px] font-mono font-medium text-muted-foreground group-hover:text-primary transition-colors'>
 							{Math.round(zoom * 100)}%
 						</span>
 					</button>
-				</>
-			)}
+				</div>
+			</div>
 		</div>
 	);
 };
