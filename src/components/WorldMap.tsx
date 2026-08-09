@@ -255,6 +255,8 @@ export const WorldMap = ({
 				<div className='flex flex-col'>
 					<button
 						onClick={() => setMapMode("GLOBE")}
+						aria-label='Switch to 3D Globe View'
+						title='3D View'
 						className={`px-3 py-2.5 transition-colors focus:outline-none ${mapMode === "GLOBE" ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-muted-foreground"}`}>
 						<span className='text-[10px] font-bold uppercase tracking-widest'>
 							3D
@@ -263,6 +265,8 @@ export const WorldMap = ({
 					<div className='h-px w-full bg-border/40' />
 					<button
 						onClick={() => setMapMode("SPHERE")}
+						aria-label='Switch to 2D Map View'
+						title='2D View'
 						className={`px-3 py-2.5 transition-colors focus:outline-none ${mapMode === "SPHERE" ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-muted-foreground"}`}>
 						<span className='text-[10px] font-bold uppercase tracking-widest'>
 							2D
@@ -285,8 +289,9 @@ export const WorldMap = ({
 				<button
 					onClick={handleExport}
 					disabled={isExporting}
+					aria-label='Export Map Snapshot'
 					title='Save snapshot'
-					className='px-3 py-2.5 hover:bg-muted/50 transition-colors focus:outline-none group disabled:opacity-50'>
+					className='px-3 py-2.5 hover:bg-muted/50 transition-colors focus:outline-none group disabled:opacity-50 flex items-center justify-center'>
 					{justExported ?
 						<Check className='h-4 w-4 text-primary' />
 					:	<Camera
@@ -295,7 +300,9 @@ export const WorldMap = ({
 					}
 				</button>
 			</div>
-			<div className='absolute bottom-4 left-4 sm:left-6 sm:ml-12 sm:translate-x-0 sm:bottom-6 z-20 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-auto w-[calc(100vw-5rem)] max-w-[320px] sm:w-80'>
+			<div
+				key={selectedCountry ?? "global-overview"}
+				className='absolute bottom-4 right-3 sm:right-auto sm:left-20 sm:bottom-6 z-20 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-auto w-[calc(100vw-4.5rem)] max-w-[320px] sm:w-80'>
 				<div className='flex flex-col bg-card/95 backdrop-blur-xl ring-1 ring-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-full rounded-2xl overflow-hidden transition-all duration-300'>
 					<button
 						onClick={() => setIsCollapsed(!isCollapsed)}
