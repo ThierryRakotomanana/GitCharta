@@ -1,4 +1,4 @@
-import { useLayoutEffect, useReducer, useRef, useState } from "react";
+import { useReducer, useState } from "react";
 import CredentialForm from "./components/CredentialForm";
 import LandingPage from "@/components/LandingPage";
 import { LoadingView } from "./components/LoadingView";
@@ -81,17 +81,11 @@ export default function App() {
 	const isMobile = useMediaQuery("(max-width: 767px)");
 	const [sheetOpen, setSheetOpen] = useState(false);
 	const [start, setStart] = useState(false);
-
-	const appShellRef = useRef<HTMLDivElement>(null);
+	const [appView, setAppView] = useState("map");
 
 	const hasSelection = country !== null;
 	const backgroundLocked = sheetOpen && !hasSelection;
 
-	useLayoutEffect(() => {
-		const node = appShellRef.current;
-		if (!node) return;
-		node.toggleAttribute("inert", backgroundLocked);
-	}, [backgroundLocked]);
 	const { ref: mapContainerRef, size } = useElementSize<HTMLDivElement>();
 	const {
 		status,
@@ -117,45 +111,45 @@ export default function App() {
 		if (c) setSheetOpen(true);
 	};
 
-	const [appView, setAppView] = useState("map");
-
 	if (!start) return <LandingPage onSubmit={() => setStart(true)} />;
-	if (!credentials.user)
+
+	if (!credentials.user) {
 		return (
 			<CredentialForm
 				onSubmit={(c) => dispatch({ type: "SET_CREDENTIALS", payload: c })}
 			/>
 		);
+	}
 
 	return (
 		<div
-			ref={appShellRef}
-			className='h-screen w-screen overflow-hidden bg-background flex flex-col'>
+			inert={backgroundLocked ? true : undefined}
+			className='flex flex-col h-screen w-screen overflow-hidden bg-background text-foreground'>
 			{user && (
-				<header className='bg-background/95 px-2 sm:px-4 backdrop-blur-xl border-b border-border/40 shadow-sm shrink-0 relative z-50'>
-					<div className='max-w-screen-2xl mx-auto px-4 h-14 grid grid-cols-2 md:grid-cols-3 items-center gap-4'>
-						<div className='flex items-center gap-3 min-w-0 justify-self-start'>
-							<Avatar className='h-8 w-8 ring-1 ring-border/60 shadow-sm shrink-0'>
+				<header className='relative z-50 shrink-0 border-b border-border/40 bg-background/90 px-4 py-2 backdrop-blur-xl'>
+					<div className='mx-auto grid h-12 max-w-screen-2xl grid-cols-2 items-center gap-4 md:grid-cols-3'>
+						<div className='flex min-w-0 items-center justify-self-start gap-3'>
+							<Avatar className='h-9 w-9 shrink-0 ring-1 ring-border/60'>
 								<AvatarImage src={user.avatarUrl} alt={user.login} />
-								<AvatarFallback className='text-[10px]'>
+								<AvatarFallback className='text-xs'>
 									{user.login.slice(0, 2).toUpperCase()}
 								</AvatarFallback>
 							</Avatar>
-							<div className='flex flex-col min-w-0'>
-								<span className='text-sm font-semibold tracking-tight text-foreground leading-none truncate'>
+							<div className='flex min-w-0 flex-col'>
+								<span className='truncate text-sm font-medium tracking-tight'>
 									{user.name ?? user.login}
 								</span>
 								<a
 									href={user.url}
 									target='_blank'
 									rel='noreferrer'
-									className='text-[11px] text-muted-foreground hover:text-foreground transition-colors mt-0.5 truncate'>
+									className='mt-0.5 truncate text-xs text-muted-foreground transition-colors hover:text-foreground'>
 									@{user.login}
 								</a>
 							</div>
 						</div>
 
-						<div className='hidden md:flex justify-self-center p-1 bg-muted/30 backdrop-blur-md rounded-full border border-border/50'>
+						<div className='hidden justify-self-center rounded-full border border-border/50 bg-muted/40 p-1 md:flex'>
 							{[
 								{ id: "map", label: "Map", icon: MapIcon },
 								{ id: "analytics", label: "Analytics", icon: BarChart3 },
@@ -164,42 +158,44 @@ export default function App() {
 								<button
 									key={tab.id}
 									onClick={() => setAppView(tab.id)}
-									className={`relative flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-300 outline-none ${
+									className={`relative flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
 										appView === tab.id ?
 											"bg-background text-foreground shadow-sm ring-1 ring-border/50"
-										:	"text-muted-foreground hover:text-foreground hover:bg-muted/50"
+										:	"text-muted-foreground hover:bg-muted hover:text-foreground"
 									}`}>
 									<tab.icon
-										className={`h-3.5 w-3.5 ${appView === tab.id ? "text-primary" : "opacity-70"}`}
+										className={`h-3.5 w-3.5 ${
+											appView === tab.id ? "text-primary" : "opacity-70"
+										}`}
 									/>
 									{tab.label}
 								</button>
 							))}
 						</div>
 
-						<div className='flex items-center gap-3 justify-self-end'>
+						<div className='flex items-center gap-4 justify-self-end'>
 							{!isMobile && (
-								<div className='hidden lg:flex items-center gap-5 pr-4 border-r border-border/40'>
-									<div className='flex items-baseline gap-1.5'>
-										<span className='text-sm font-semibold tabular-nums text-foreground tracking-tight'>
+								<div className='hidden items-center gap-6 border-r border-border/40 pr-6 lg:flex'>
+									<div className='flex items-baseline gap-2'>
+										<span className='text-sm font-semibold tabular-nums tracking-tight'>
 											{user.followersCount.toLocaleString()}
 										</span>
-										<span className='text-[10px] uppercase tracking-widest text-muted-foreground font-medium'>
+										<span className='text-[10px] font-medium uppercase tracking-widest text-muted-foreground'>
 											Followers
 										</span>
 									</div>
-									<div className='flex items-baseline gap-1.5'>
-										<span className='text-sm font-semibold tabular-nums text-foreground tracking-tight'>
+									<div className='flex items-baseline gap-2'>
+										<span className='text-sm font-semibold tabular-nums tracking-tight'>
 											{user.followingCount.toLocaleString()}
 										</span>
-										<span className='text-[10px] uppercase tracking-widest text-muted-foreground font-medium'>
+										<span className='text-[10px] font-medium uppercase tracking-widest text-muted-foreground'>
 											Following
 										</span>
 									</div>
 								</div>
 							)}
 
-							<div className='flex items-center gap-1'>
+							<div className='flex items-center gap-2'>
 								{status === "success" && currentAudience && (
 									<Sheet
 										open={sheetOpen}
@@ -209,7 +205,7 @@ export default function App() {
 											<Button
 												variant='ghost'
 												size='icon'
-												className='h-8 w-8 md:hidden text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors'
+												className='h-9 w-9 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground md:hidden'
 												title='Open Leaderboard'>
 												<List className='h-4 w-4' />
 											</Button>
@@ -225,15 +221,13 @@ export default function App() {
 											onInteractOutside={(e) => {
 												if (hasSelection) e.preventDefault();
 											}}
-											className='w-full sm:w-85 p-0 flex flex-col border-l border-border/30 bg-background/90 backdrop-blur-lg shadow-2xl'>
-											<div className='px-5 py-4 border-b border-border/30 bg-card/30'>
-												<SheetHeader>
-													<SheetTitle className='text-xs font-bold uppercase tracking-widest text-primary'>
-														Global Distribution
-													</SheetTitle>
-												</SheetHeader>
-											</div>
-											<div className='flex-1 overflow-hidden p-5 pt-3'>
+											className='w-full flex-col p-0 sm:w-100'>
+											<SheetHeader className='bg-muted/20'>
+												<SheetTitle className='text-xs font-bold uppercase tracking-widest text-primary'>
+													Global Distribution
+												</SheetTitle>
+											</SheetHeader>
+											<div className='flex-1 overflow-hidden p-6 pt-4'>
 												<CountryList
 													data={currentAudience}
 													country={country}
@@ -250,7 +244,7 @@ export default function App() {
 									size='icon'
 									onClick={handleResetUser}
 									title='Switch Account'
-									className='h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors'>
+									className='h-9 w-9 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground'>
 									<ArrowRightLeft className='h-4 w-4' />
 								</Button>
 
@@ -258,7 +252,7 @@ export default function App() {
 									href='https://github.com/ThierryRakotomanana/Github-Audience-Atlas'
 									target='_blank'
 									rel='noreferrer'
-									className='h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors'>
+									className='flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'>
 									<GithubIcon className='h-4 w-4' />
 								</a>
 							</div>
@@ -267,24 +261,24 @@ export default function App() {
 				</header>
 			)}
 
-			<main className='flex-1 flex flex-col min-h-0 relative overflow-hidden'>
+			<main className='relative flex min-h-0 flex-1 flex-col overflow-hidden'>
 				{status === "loading" && (
 					<LoadingView steps={steps} pct={pct} onCancel={handleResetUser} />
 				)}
 
 				{status === "quota_warning" && estimate && (
-					<div className='flex-1 flex items-center justify-center p-4'>
-						<Alert className='max-w-md border-warning bg-warning/10 text-warning-foreground [&>svg]:text-warning-foreground'>
+					<div className='flex flex-1 items-center justify-center p-6'>
+						<Alert className='max-w-md border-warning bg-warning/10 text-warning-foreground'>
 							<AlertTriangle className='h-4 w-4' />
 							<AlertTitle>Approaching rate limit</AlertTitle>
 							<AlertDescription className='text-warning-foreground/90'>
 								{estimate.remaining} requests remaining, {estimate.pointsNeeded}{" "}
-								needed.{" "}
+								needed.
 								{estimate.willExceed ?
-									"This will likely exceed your quota."
-								:	"You should have enough headroom."}
+									" This will likely exceed your quota."
+								:	" You should have enough headroom."}
 							</AlertDescription>
-							<div className='flex gap-2 mt-3'>
+							<div className='mt-4 flex gap-3'>
 								<Button size='sm' onClick={proceed}>
 									Continue anyway
 								</Button>
@@ -307,9 +301,9 @@ export default function App() {
 				)}
 
 				{status === "success" && currentAudience && (
-					<div className='flex flex-1 items-stretch min-h-0 w-full overflow-hidden relative'>
-						<div ref={mapContainerRef} className='flex-1 relative overflow-hidden'>
-							<div className='absolute top-3 sm:top-6 left-1/2 -translate-x-1/2 z-20 shadow-xl rounded-full bg-background/80 backdrop-blur-md border border-border/60 p-0.5 sm:p-1 max-w-[calc(100vw-2rem)] overflow-x-auto'>
+					<div className='relative flex w-full min-h-0 flex-1 items-stretch overflow-hidden'>
+						<div ref={mapContainerRef} className='relative flex-1 overflow-hidden'>
+							<div className='absolute left-1/2 top-4 z-20 -translate-x-1/2 max-w-[calc(100vw-2rem)] overflow-x-auto rounded-full border border-border/60 bg-background/80 p-1 shadow-lg backdrop-blur-md sm:top-8'>
 								<Tabs
 									value={audienceType}
 									onValueChange={(v) =>
@@ -318,18 +312,19 @@ export default function App() {
 											payload: v as AudienceType
 										})
 									}>
-									<TabsList className='bg-transparent h-8 sm:h-9'>
+									<TabsList className='h-9 bg-transparent sm:h-10'>
 										{AUDIENCE_TABS.map((tab) => (
 											<TabsTrigger
 												key={tab.value}
 												value={tab.value}
-												className='rounded-full px-3 sm:px-6 text-xs sm:text-sm font-medium'>
+												className='rounded-full px-4 text-xs font-medium sm:px-6 sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm'>
 												{tab.label}
 											</TabsTrigger>
 										))}
 									</TabsList>
 								</Tabs>
 							</div>
+
 							{size && size.width > 0 && size.height > 0 ?
 								<WorldMap
 									width={size.width}
@@ -344,19 +339,19 @@ export default function App() {
 										|| "Network"
 									}
 								/>
-							:	<div className='absolute inset-0 flex items-center justify-center gap-2 text-sm text-muted-foreground'>
-									<Loader2 className='h-4 w-4 animate-spin' />
+							:	<div className='absolute inset-0 flex items-center justify-center gap-3 text-sm font-medium text-muted-foreground'>
+									<Loader2 className='h-5 w-5 animate-spin' />
 									Calculating map dimensions...
 								</div>
 							}
 						</div>
 
-						<div className='absolute right-0 top-1/2 -translate-y-1/2 z-20 hidden md:block'>
+						<div className='absolute right-0 top-1/2 z-20 hidden -translate-y-1/2 md:block'>
 							<Button
 								variant='secondary'
 								onClick={() => setSheetOpen(true)}
-								className='h-32 w-8 rounded-l-xl rounded-r-none border border-r-0 border-border/50 bg-card/80 backdrop-blur-md shadow-2xl flex flex-col items-center justify-center p-0 hover:bg-card hover:w-9 transition-all'>
-								<div className='-rotate-90 whitespace-nowrap text-[10px] font-bold text-muted-foreground uppercase tracking-widest'>
+								className='flex h-36 w-8 flex-col items-center justify-center rounded-l-xl rounded-r-none border border-r-0 border-border/50 bg-card/90 p-0 shadow-2xl backdrop-blur-xl transition-all hover:w-10 hover:bg-card focus-visible:ring-2 focus-visible:ring-primary'>
+								<div className='-rotate-90 whitespace-nowrap text-[11px] font-bold uppercase tracking-widest text-muted-foreground'>
 									Leaderboard
 								</div>
 							</Button>
@@ -365,13 +360,13 @@ export default function App() {
 				)}
 			</main>
 
-			<footer className='hidden sm:flex h-10 w-full border-t border-border bg-muted/40 px-4 sm:px-6 items-center justify-between text-xs text-muted-foreground shrink-0'>
+			<footer className='hidden h-12 shrink-0 items-center justify-between border-t border-border bg-muted/30 px-6 text-xs text-muted-foreground sm:flex'>
 				<p>© 2026 GitCharta</p>
-				<div className='flex gap-4'>
-					<a href='#' className='hover:underline'>
+				<div className='flex gap-6'>
+					<a href='#' className='transition-colors hover:text-foreground'>
 						Privacy
 					</a>
-					<a href='#' className='hover:underline'>
+					<a href='#' className='transition-colors hover:text-foreground'>
 						Terms
 					</a>
 				</div>
