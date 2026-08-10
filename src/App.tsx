@@ -1,4 +1,4 @@
-import { useReducer, useState } from "react";
+import { useLayoutEffect, useReducer, useRef, useState } from "react";
 import CredentialForm from "./components/CredentialForm";
 import LandingPage from "@/components/LandingPage";
 import { LoadingView } from "./components/LoadingView";
@@ -82,6 +82,16 @@ export default function App() {
 	const [sheetOpen, setSheetOpen] = useState(false);
 	const [start, setStart] = useState(false);
 
+	const appShellRef = useRef<HTMLDivElement>(null);
+
+	const hasSelection = country !== null;
+	const backgroundLocked = sheetOpen && !hasSelection;
+
+	useLayoutEffect(() => {
+		const node = appShellRef.current;
+		if (!node) return;
+		node.toggleAttribute("inert", backgroundLocked);
+	}, [backgroundLocked]);
 	const { ref: mapContainerRef, size } = useElementSize<HTMLDivElement>();
 	const {
 		status,
@@ -118,7 +128,9 @@ export default function App() {
 		);
 
 	return (
-		<div className='h-screen w-screen overflow-hidden bg-background flex flex-col'>
+		<div
+			ref={appShellRef}
+			className='h-screen w-screen overflow-hidden bg-background flex flex-col'>
 			{user && (
 				<header className='bg-background/95 px-2 sm:px-4 backdrop-blur-xl border-b border-border/40 shadow-sm shrink-0 relative z-50'>
 					<div className='max-w-screen-2xl mx-auto px-4 h-14 grid grid-cols-2 md:grid-cols-3 items-center gap-4'>
@@ -189,7 +201,10 @@ export default function App() {
 
 							<div className='flex items-center gap-1'>
 								{status === "success" && currentAudience && (
-									<Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+									<Sheet
+										open={sheetOpen}
+										onOpenChange={setSheetOpen}
+										modal={!hasSelection}>
 										<SheetTrigger asChild>
 											<Button
 												variant='ghost'
@@ -202,7 +217,15 @@ export default function App() {
 
 										<SheetContent
 											side='right'
-											className='w-full sm:w-85 p-0 flex flex-col border-l border-border/30 bg-background/90 backdrop-blur-2xl shadow-2xl'>
+											overlayClassName={
+												hasSelection ?
+													"opacity-0 backdrop-blur-none pointer-events-none"
+												:	undefined
+											}
+											onInteractOutside={(e) => {
+												if (hasSelection) e.preventDefault();
+											}}
+											className='w-full sm:w-85 p-0 flex flex-col border-l border-border/30 bg-background/90 backdrop-blur-lg shadow-2xl'>
 											<div className='px-5 py-4 border-b border-border/30 bg-card/30'>
 												<SheetHeader>
 													<SheetTitle className='text-xs font-bold uppercase tracking-widest text-primary'>
