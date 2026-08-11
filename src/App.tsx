@@ -221,7 +221,7 @@ export default function App() {
 											onInteractOutside={(e) => {
 												if (hasSelection) e.preventDefault();
 											}}
-											className='w-full flex-col p-0 sm:w-100'>
+											className='w-full flex-col p-0 sm:w-[400px]'>
 											<SheetHeader className='bg-muted/20'>
 												<SheetTitle className='text-xs font-bold uppercase tracking-widest text-primary'>
 													Global Distribution
