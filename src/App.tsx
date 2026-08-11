@@ -9,7 +9,12 @@ import { useAudience } from "./hooks/useAudience";
 import { useElementSize } from "./hooks/useElementSize";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import {
 	Sheet,
 	SheetContent,
@@ -22,6 +27,7 @@ import {
 	AlertTriangle,
 	ArrowRightLeft,
 	BarChart3,
+	Filter,
 	List,
 	Loader2,
 	MapIcon,
@@ -201,7 +207,6 @@ export default function App() {
 										open={sheetOpen}
 										onOpenChange={(open) => {
 											setSheetOpen(open);
-											if (!open) dispatch({ type: "SET_COUNTRY", payload: null });
 										}}
 										modal={false}>
 										<SheetTrigger asChild>
@@ -302,26 +307,34 @@ export default function App() {
 				{status === "success" && currentAudience && (
 					<div className='relative flex w-full min-h-0 flex-1 items-stretch overflow-hidden'>
 						<div ref={mapContainerRef} className='relative flex-1 overflow-hidden'>
-							<div className='absolute left-1/2 top-4 z-20 -translate-x-1/2 max-w-[calc(100vw-2rem)] overflow-x-auto rounded-full border border-border/60 bg-background/80 p-1 shadow-lg backdrop-blur-md sm:top-8'>
-								<Tabs
-									value={audienceType}
-									onValueChange={(v) =>
-										dispatch({
-											type: "SET_AUDIENCE_TYPE",
-											payload: v as AudienceType
-										})
-									}>
-									<TabsList className='h-9 bg-transparent sm:h-10'>
+							<div className='absolute top-6 left-6 z-20'>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button
+											variant='secondary'
+											className='h-9 gap-2 rounded-full border border-border/40 bg-background/60 px-4 text-xs font-medium shadow-lg backdrop-blur-xl hover:bg-background/80'>
+											<Filter className='h-3.5 w-3.5' />
+											{AUDIENCE_TABS.find((t) => t.value === audienceType)?.label}
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent
+										align='start'
+										className='w-40 rounded-xl bg-background/95 backdrop-blur-xl'>
 										{AUDIENCE_TABS.map((tab) => (
-											<TabsTrigger
+											<DropdownMenuItem
 												key={tab.value}
-												value={tab.value}
-												className='rounded-full px-4 text-xs font-medium sm:px-6 sm:text-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm'>
+												onClick={() =>
+													dispatch({
+														type: "SET_AUDIENCE_TYPE",
+														payload: tab.value as AudienceType
+													})
+												}
+												className={`text-xs ${audienceType === tab.value ? "font-bold text-primary" : "text-muted-foreground"}`}>
 												{tab.label}
-											</TabsTrigger>
+											</DropdownMenuItem>
 										))}
-									</TabsList>
-								</Tabs>
+									</DropdownMenuContent>
+								</DropdownMenu>
 							</div>
 
 							{size && size.width > 0 && size.height > 0 ?
