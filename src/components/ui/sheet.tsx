@@ -29,14 +29,19 @@ function SheetPortal({
 }
 
 function SheetOverlay({
+	visible,
 	className,
 	...props
-}: React.ComponentProps<typeof SheetPrimitive.Overlay>) {
+}: React.ComponentProps<"div"> & { visible: boolean }) {
 	return (
-		<SheetPrimitive.Overlay
+		<div
 			data-slot='sheet-overlay'
+			aria-hidden
 			className={cn(
-				"fixed inset-0 z-50 bg-background/60 backdrop-blur-sm data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+				"fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-[opacity,backdrop-filter] duration-300 ease-out",
+				visible ? "opacity-100" : (
+					"pointer-events-none opacity-0 backdrop-blur-none"
+				),
 				className
 			)}
 			{...props}
@@ -46,7 +51,7 @@ function SheetOverlay({
 
 function SheetContent({
 	className,
-	overlayClassName,
+	overlayVisible = true,
 	children,
 	side = "right",
 	showCloseButton = true,
@@ -54,11 +59,11 @@ function SheetContent({
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
 	side?: "top" | "right" | "bottom" | "left";
 	showCloseButton?: boolean;
-	overlayClassName?: string;
+	overlayVisible?: boolean;
 }) {
 	return (
 		<SheetPortal>
-			<SheetOverlay className={overlayClassName} />
+			<SheetOverlay visible={overlayVisible} />
 			<SheetPrimitive.Content
 				data-slot='sheet-content'
 				data-side={side}

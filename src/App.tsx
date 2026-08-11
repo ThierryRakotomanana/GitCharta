@@ -199,8 +199,11 @@ export default function App() {
 								{status === "success" && currentAudience && (
 									<Sheet
 										open={sheetOpen}
-										onOpenChange={setSheetOpen}
-										modal={!hasSelection}>
+										onOpenChange={(open) => {
+											setSheetOpen(open);
+											if (!open) dispatch({ type: "SET_COUNTRY", payload: null });
+										}}
+										modal={false}>
 										<SheetTrigger asChild>
 											<Button
 												variant='ghost'
@@ -213,11 +216,7 @@ export default function App() {
 
 										<SheetContent
 											side='right'
-											overlayClassName={
-												hasSelection ?
-													"opacity-0 backdrop-blur-none pointer-events-none"
-												:	undefined
-											}
+											overlayVisible={backgroundLocked}
 											onInteractOutside={(e) => {
 												if (hasSelection) e.preventDefault();
 											}}
