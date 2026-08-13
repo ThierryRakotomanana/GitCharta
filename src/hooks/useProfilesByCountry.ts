@@ -1,14 +1,14 @@
 import { useMemo } from "react";
-import type { LocalizedGithubProfile } from "@/api/graphql.types";
+import type { LocalizedProfile } from "@/api/api.type";
 
 export function useProfilesByCountry(
-	audience: LocalizedGithubProfile[]
-): Map<string, LocalizedGithubProfile[]> {
+	audience: LocalizedProfile[]
+): Map<string, LocalizedProfile[]> {
 	return useMemo(() => {
 		return audience.reduce((acc, profile) => {
 			const regionalProfiles = acc.get(profile.country) ?? [];
 			regionalProfiles.push(profile);
 			return acc.set(profile.country, regionalProfiles);
-		}, new Map<string, LocalizedGithubProfile[]>());
+		}, new Map<string, LocalizedProfile[]>());
 	}, [audience]);
 }

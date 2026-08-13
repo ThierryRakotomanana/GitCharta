@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { scaleLog } from "d3-scale";
-import type { LocalizedGithubProfile } from "@/api/graphql.types";
+import type { LocalizedProfile } from "@/api/api.type";
 
 export function useHeatScale(
-	profilesByCountry: Map<string, LocalizedGithubProfile[]>
+	profilesByCountry: Map<string, LocalizedProfile[]>
 ): (count: number) => number {
 	const maxCount = useMemo(
 		() =>

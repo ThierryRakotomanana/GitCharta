@@ -1,11 +1,11 @@
-import type { GithubProfileNode, ProfileProgress } from "@/api/graphql.types";
+import type { ProfileNode } from "@/api/api.type";
 import { CN } from "../constants/countries";
 import { CDICT } from "../constants/lookupTables";
 import { SKIP } from "../constants/unlocated";
-import { delay } from "@/api/graphql.api";
+import { delay } from "@/api/useAudienceJob";
 
 export type GeocodeResult = {
-	usersByCountry: Map<string, GithubProfileNode[]>;
+	usersByCountry: Map<string, ProfileNode[]>;
 	profileCountryMap: Map<string, string>;
 	missingDictionaryMatches: Map<string, string | null>;
 	invalidOrSkippedLocations: Map<string, string>;
@@ -75,21 +75,21 @@ export const guessCountry = (locations: string[]) => {
 };
 
 export async function geocode(
-	rawData: GithubProfileNode[],
+	rawData: ProfileNode[],
 	onProgress: ({ done, total }: { done: number; total: number }) => void,
 	signal?: AbortSignal
 ): Promise<GeocodeResult | undefined> {
 	const profileCountryMap = new Map<string, string>();
 	const missingDictionaryMatches = new Map<string, string | null>();
 	const invalidOrSkippedLocations = new Map<string, string>();
-	const usersByCountry = new Map<string, GithubProfileNode[]>();
+	const usersByCountry = new Map<string, ProfileNode[]>();
 
 	if (signal?.aborted) return;
 
 	const total = rawData.length;
 	const YIELD_BATCH_SIZE = 100;
 
-	const safeOnProgress = (progress: ProfileProgress) => {
+	const safeOnProgress = (progress: { done: number; total: number }) => {
 		if (signal?.aborted) return;
 		onProgress(progress);
 	};
