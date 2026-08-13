@@ -5,7 +5,7 @@ import { LoadingView } from "./components/LoadingView";
 import { ErrorView } from "@/components/ErrorView";
 import { WorldMap } from "@/components/WorldMap";
 import { CountryList } from "@/components/CountryList";
-import { useAudience } from "./hooks/useAudience";
+import { useAudience, type Credentials } from "./api/useAudience";
 import { useElementSize } from "./hooks/useElementSize";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Button } from "@/components/ui/button";
@@ -31,10 +31,10 @@ import {
 	List,
 	Loader2,
 	MapIcon,
+	WifiOff,
 	Workflow
 } from "lucide-react";
 import { GithubIcon } from "@/components/icons/lucide-github";
-import type { Credentials } from "@/api/graphql.types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type AudienceType = "followers" | "following" | "ghosts";
@@ -60,7 +60,7 @@ type AppAction =
 const initialState: AppState = {
 	country: null,
 	audienceType: "followers",
-	credentials: { user: "", token: "" }
+	credentials: { user: "" }
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -96,14 +96,15 @@ export default function App() {
 	const {
 		status,
 		steps,
-		error,
 		pct,
-		estimate,
 		user,
 		audience,
+		connectionIssue,
+		partial,
+		error,
 		resetAt,
 		partialCount,
-		proceed,
+		cancel,
 		retry
 	} = useAudience(credentials);
 
@@ -111,7 +112,11 @@ export default function App() {
 		AUDIENCE_TABS.find((t) => t.value === audienceType)?.noun ?? "follower";
 	const currentAudience = audience?.[audienceType];
 
-	const handleResetUser = () => dispatch({ type: "RESET_USER" });
+	const handleResetUser = () => {
+		cancel();
+		dispatch({ type: "RESET_USER" });
+	};
+
 	const setCountry = (c: string | null) => {
 		dispatch({ type: "SET_COUNTRY", payload: c });
 		if (c) setSheetOpen(true);
@@ -266,37 +271,27 @@ export default function App() {
 			)}
 
 			<main className='relative flex min-h-0 flex-1 flex-col overflow-hidden'>
-				{status === "loading" && (
-					<LoadingView steps={steps} pct={pct} onCancel={handleResetUser} />
-				)}
-
-				{status === "quota_warning" && estimate && (
-					<div className='flex flex-1 items-center justify-center p-6'>
-						<Alert className='max-w-md border-warning bg-warning/10 text-warning-foreground'>
-							<AlertTriangle className='h-4 w-4' />
-							<AlertTitle>Approaching rate limit</AlertTitle>
-							<AlertDescription className='text-warning-foreground/90'>
-								{estimate.remaining} requests remaining, {estimate.pointsNeeded}{" "}
-								needed.
-								{estimate.willExceed ?
-									" This will likely exceed your quota."
-								:	" You should have enough headroom."}
+				{connectionIssue && (
+					<div className='absolute top-3 left-1/2 z-50 -translate-x-1/2'>
+						<Alert className='border-amber-500/50 bg-amber-500/10 text-amber-500 backdrop-blur-md py-2 px-4 shadow-lg'>
+							<WifiOff className='h-4 w-4' />
+							<AlertTitle className='text-xs font-semibold'>
+								Reconnecting to server...
+							</AlertTitle>
+							<AlertDescription className='text-[11px] opacity-90'>
+								Background job is active. Retrying polling automatically.
 							</AlertDescription>
-							<div className='mt-4 flex gap-3'>
-								<Button size='sm' onClick={proceed}>
-									Continue anyway
-								</Button>
-								<Button size='sm' variant='secondary' onClick={handleResetUser}>
-									Switch user
-								</Button>
-							</div>
 						</Alert>
 					</div>
 				)}
 
-				{status === "error" && error && (
+				{status === "loading" && (
+					<LoadingView steps={steps} pct={pct} onCancel={handleResetUser} />
+				)}
+
+				{status === "error" && (
 					<ErrorView
-						message={error}
+						message={error ?? "Something went wrong"}
 						resetAt={resetAt}
 						partialCount={partialCount}
 						onRetry={retry}
@@ -307,7 +302,7 @@ export default function App() {
 				{status === "success" && currentAudience && (
 					<div className='relative flex w-full min-h-0 flex-1 items-stretch overflow-hidden'>
 						<div ref={mapContainerRef} className='relative flex-1 overflow-hidden'>
-							<div className='absolute top-6 left-6 z-20'>
+							<div className='absolute top-6 left-6 z-20 flex flex-col gap-2'>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<Button
@@ -329,12 +324,23 @@ export default function App() {
 														payload: tab.value as AudienceType
 													})
 												}
-												className={`text-xs ${audienceType === tab.value ? "font-bold text-primary" : "text-muted-foreground"}`}>
+												className={`text-xs ${
+													audienceType === tab.value ?
+														"font-bold text-primary"
+													:	"text-muted-foreground"
+												}`}>
 												{tab.label}
 											</DropdownMenuItem>
 										))}
 									</DropdownMenuContent>
 								</DropdownMenu>
+
+								{partial && (
+									<div className='flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-[11px] text-blue-400 backdrop-blur-md'>
+										<AlertTriangle className='h-3 w-3' />
+										<span>Partial dataset — backfilling remaining history</span>
+									</div>
+								)}
 							</div>
 
 							{size && size.width > 0 && size.height > 0 ?

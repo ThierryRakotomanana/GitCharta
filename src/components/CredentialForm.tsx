@@ -15,8 +15,8 @@ import {
 	ExternalLink,
 	ArrowRight
 } from "lucide-react";
-import type { Credentials } from "@/api/graphql.types";
 import { GithubIcon } from "@/components/icons/lucide-github";
+import type { Credentials } from "@/api/api.type";
 
 const REQUIRED_SCOPES = ["read:user", "read:followers"] as const;
 const UNFOLLOW_SCOPE = "user:follow";
@@ -24,7 +24,7 @@ const UNFOLLOW_SCOPE = "user:follow";
 export default function CredentialForm({
 	onSubmit
 }: {
-	onSubmit: (c: Credentials) => void;
+	onSubmit: (c: Credentials & { token: string }) => void;
 }) {
 	const [username, setUsername] = useState("");
 	const [token, setToken] = useState("");
