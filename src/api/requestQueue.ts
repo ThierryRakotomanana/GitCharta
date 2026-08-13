@@ -12,21 +12,45 @@ type QueueItem<T> = {
 
 const MAX_QUEUE_RETRIES_ON_429 = 6;
 
-class RequestQueue {
+export class RequestQueue {
 	private items: QueueItem<unknown>[] = [];
 	private draining = false;
 	private notBeforeMs = 0;
 
 	constructor(private readonly minIntervalMs: number) {}
 
-	enqueue<T>(run: () => Promise<T>): Promise<T> {
+	reset() {
+		this.items = [];
+		this.draining = false;
+		this.notBeforeMs = 0;
+	}
+
+	enqueue<T>(run: () => Promise<T>, signal?: AbortSignal): Promise<T> {
+		if (signal?.aborted) {
+			return Promise.reject(new ApiError("Request aborted", 0, null, null));
+		}
+
 		return new Promise<T>((resolve, reject) => {
-			this.items.push({
+			const item: QueueItem<unknown> = {
 				run,
 				resolve: resolve as (value: unknown) => void,
 				reject,
 				attempts: 0
-			});
+			};
+
+			const onAbort = () => {
+				const idx = this.items.indexOf(item);
+				if (idx !== -1) {
+					this.items.splice(idx, 1);
+				}
+				reject(new ApiError("Request aborted", 0, null, null));
+			};
+
+			if (signal) {
+				signal.addEventListener("abort", onAbort, { once: true });
+			}
+
+			this.items.push(item);
 			void this.drain();
 		});
 	}
