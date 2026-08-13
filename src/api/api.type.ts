@@ -12,6 +12,9 @@ export interface ProfileNode {
 	isSiteAdmin: boolean;
 }
 
+export type LocalizedProfile = ProfileNode & { country: string };
+export type Credentials = { user: string };
+
 export type ReconcileStage = "graphql" | "rest" | "backfill";
 
 export interface JobProgress {

@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { geocode } from "../lib/geocode";
 import { UNKNOWN_REGION } from "../lib/region";
-import type { AudienceJob, ProfileNode } from "./api.type";
+import type { AudienceJob, LocalizedProfile, ProfileNode } from "./api.type";
 
-export type LocalizedProfile = ProfileNode & { country: string };
 export type AudienceData = {
 	followers: LocalizedProfile[];
 	following: LocalizedProfile[];

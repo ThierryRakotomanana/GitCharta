@@ -3,10 +3,8 @@ import { useAudienceJob } from "./useAudienceJob";
 import { useAudienceGeocoding } from "./useAudienceGeocoding";
 import { buildSteps, overallPercent, type Step } from "./audienceProgress";
 import { useUserProfile } from "@/api/useUserProfile";
+import type { Credentials } from "@/api/api.type";
 
-export type Credentials = { user: string };
-export type { Step, StepId } from "./audienceProgress";
-export type { AudienceData, LocalizedProfile } from "./useAudienceGeocoding";
 export type AudienceStatus = "idle" | "loading" | "success" | "error";
 
 const isDoneOrPartial = (phase: string) =>
