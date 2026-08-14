@@ -265,6 +265,7 @@ export function useAudienceJob(
 		}
 		generationRef.current += 1;
 		abortRef.current = new AbortController();
+		failureStreakRef.current = 0;
 		void runLifecycle(generationRef.current);
 
 		return () => {
