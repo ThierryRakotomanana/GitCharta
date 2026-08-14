@@ -1,8 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import type {
-	GithubUserProfile,
-	LocalizedGithubProfile
-} from "@/api/graphql.types";
+import type { LocalizedProfile } from "@/api/api.type";
 import { useGeoJson } from "@/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
 import { Camera, Check, ChevronDown, ChevronUp } from "lucide-react";
@@ -18,6 +15,7 @@ import { useMapZoom } from "@/hooks/useMapZoom";
 import { ZoomControls } from "@/components/ZoomControls";
 import { CountryFlag } from "@/components/CountryFlag";
 import { Badge } from "@/components/ui/badge";
+import type { UserProfileResponse } from "@/api/api.type";
 
 export type MAP_MODE = "GLOBE" | "SPHERE";
 
@@ -25,9 +23,9 @@ export interface WorldMapProps {
 	width: number;
 	height: number;
 	setCountry: (country: string | null) => void;
-	audience: LocalizedGithubProfile[];
+	audience: LocalizedProfile[];
 	selectedCountry?: string | null;
-	user: GithubUserProfile | null;
+	user: UserProfileResponse | null;
 	isMobile: boolean;
 	mapTypeLabel?: string;
 }

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { getRegionName, UNKNOWN_REGION } from "@/lib/region";
-import type { LocalizedGithubProfile } from "@/api/graphql.types";
+import type { LocalizedProfile } from "@/api/api.type";
 
 export type MapStats = {
 	coveragePct: number;
@@ -10,8 +10,8 @@ export type MapStats = {
 };
 
 export function useMapStats(
-	audience: LocalizedGithubProfile[],
-	profilesByCountry: Map<string, LocalizedGithubProfile[]>
+	audience: LocalizedProfile[],
+	profilesByCountry: Map<string, LocalizedProfile[]>
 ): MapStats {
 	return useMemo(() => {
 		const total = audience.length;

@@ -15,16 +15,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { RegionIcon } from "@/components/RegionIcon.Panel";
 import { EmptyState } from "@/components/EmptyState.Panel";
-import type { LocalizedGithubProfile } from "@/api/graphql.types";
+import type { LocalizedProfile } from "@/api/api.type";
 
 interface CountryListProps {
-	data: LocalizedGithubProfile[];
+	data: LocalizedProfile[];
 	country: string | null;
 	setCountry: (arg: string | null) => void;
 	label?: string;
 }
 
-const EMPTY_PROFILES: LocalizedGithubProfile[] = [];
+const EMPTY_PROFILES: LocalizedProfile[] = [];
 const COUNTRY_ROW_HEIGHT = 58;
 const PROFILE_ROW_HEIGHT = 64;
 
@@ -71,7 +71,7 @@ export function CountryList({
 			const regionalUsers = acc.get(code) || [];
 			regionalUsers.push(user);
 			return acc.set(code, regionalUsers);
-		}, new Map<string, LocalizedGithubProfile[]>());
+		}, new Map<string, LocalizedProfile[]>());
 	}, [data]);
 
 	const sortedCountries = useMemo(() => {
