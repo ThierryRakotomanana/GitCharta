@@ -54,15 +54,15 @@ export function delay(ms: number, signal?: AbortSignal): Promise<void> {
 			resolve();
 			return;
 		}
-		const timeoutId = setTimeout(resolve, ms);
-		signal?.addEventListener(
-			"abort",
-			() => {
-				clearTimeout(timeoutId);
-				resolve();
-			},
-			{ once: true }
-		);
+		const onAbort = () => {
+			clearTimeout(timeoutId);
+			resolve();
+		};
+		const timeoutId = setTimeout(() => {
+			signal?.removeEventListener("abort", onAbort);
+			resolve();
+		}, ms);
+		signal?.addEventListener("abort", onAbort, { once: true });
 	});
 }
 
@@ -119,7 +119,12 @@ export function useAudienceJob(
 				});
 				try {
 					const job = await createAudienceJob(login, type);
-					if (!isCurrent(generation)) return;
+					if (!isCurrent(generation)) {
+						void cancelAudienceJob(job.id).catch(() => {
+							console.warn("Failed to cancel orphaned audience job:", job.id);
+						});
+						return;
+					}
 
 					jobIdRef.current = job.id;
 					jobId = job.id;
