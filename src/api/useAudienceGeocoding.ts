@@ -39,7 +39,7 @@ export function useAudienceGeocoding(
 		startedForRef.current = resetKey;
 
 		const controller = new AbortController();
-		const followers = followingResult?.nodes ?? [];
+		const followers = followersResult?.nodes ?? [];
 		const following = followingResult?.nodes ?? [];
 
 		const uniqueProfiles = new Map<string, ProfileNode>();
