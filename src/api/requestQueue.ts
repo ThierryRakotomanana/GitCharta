@@ -46,9 +46,20 @@ export class RequestQueue {
 				reject(new ApiError("Request aborted", 0, null, null));
 			};
 
+			const detach = () => signal?.removeEventListener("abort", onAbort);
+
 			if (signal) {
 				signal.addEventListener("abort", onAbort, { once: true });
 			}
+
+			item.resolve = ((value: unknown) => {
+				detach();
+				resolve(value as T);
+			}) as (value: unknown) => void;
+			item.reject = (reason: unknown) => {
+				detach();
+				reject(reason);
+			};
 
 			this.items.push(item);
 			void this.drain();
@@ -165,5 +176,5 @@ export async function apiRequest<T>(
 			if (externalSignal)
 				externalSignal.removeEventListener("abort", onExternalAbort);
 		}
-	});
+	}, init.signal ?? undefined);
 }
