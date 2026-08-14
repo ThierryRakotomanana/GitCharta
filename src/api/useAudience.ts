@@ -49,28 +49,43 @@ export function useAudience(credentials: Credentials) {
 		[followersJob.job?.progress, followingJob.job?.progress, geocodeProgress]
 	);
 
+	const followersPhase = followersJob.phase;
+	const followingPhase = followingJob.phase;
+	const followersCount = followersJob.job?.result?.nodes.length ?? 0;
+	const followingCount = followingJob.job?.result?.nodes.length ?? 0;
+	const followersProgressDone = followersJob.job?.progress.done ?? 0;
+	const followingProgressDone = followingJob.job?.progress.done ?? 0;
+	const followingStage = followingJob.job?.progress.stage ?? "graphql";
+	const recoveredCount = followingJob.job?.result?.recoveredLogins.length ?? 0;
+
 	const steps: Step[] = useMemo(
 		() =>
 			buildSteps({
 				bothJobsDone,
-				followersPhase: followersJob.phase,
-				followingPhase: followingJob.phase,
+				followersPhase,
+				followingPhase,
 				anyFailed,
-				followersCount: followersJob.job?.result?.nodes.length ?? 0,
-				followingCount: followingJob.job?.result?.nodes.length ?? 0,
-				followersProgressDone: followersJob.job?.progress.done ?? 0,
-				followingProgressDone: followingJob.job?.progress.done ?? 0,
-				followingStage: followingJob.job?.progress.stage ?? "graphql",
-				recoveredCount: followingJob.job?.result?.recoveredLogins.length ?? 0,
+				followersCount,
+				followingCount,
+				followersProgressDone,
+				followingProgressDone,
+				followingStage,
+				recoveredCount,
 				geocodeStatus,
 				geocodeProgress,
 				audience
 			}),
 		[
 			bothJobsDone,
-			followersJob,
-			followingJob,
+			followersPhase,
+			followingPhase,
 			anyFailed,
+			followersCount,
+			followingCount,
+			followersProgressDone,
+			followingProgressDone,
+			followingStage,
+			recoveredCount,
 			geocodeStatus,
 			geocodeProgress,
 			audience
@@ -89,14 +104,12 @@ export function useAudience(credentials: Credentials) {
 	const resetAt = followersJob.resetAt ?? followingJob.resetAt ?? null;
 
 	const partialCount = useMemo(() => {
-		const followersOk = isDoneOrPartial(followersJob.phase);
-		const followingOk = isDoneOrPartial(followingJob.phase);
-		if (followersOk && !followingOk)
-			return followersJob.job?.result?.nodes.length ?? null;
-		if (followingOk && !followersOk)
-			return followingJob.job?.result?.nodes.length ?? null;
+		const followersOk = isDoneOrPartial(followersPhase);
+		const followingOk = isDoneOrPartial(followingPhase);
+		if (followersOk && !followingOk) return followersCount;
+		if (followingOk && !followersOk) return followingCount;
 		return null;
-	}, [followersJob, followingJob]);
+	}, [followersPhase, followingPhase, followersCount, followingCount]);
 
 	const cancel = useCallback(() => {
 		void followersJob.cancel();

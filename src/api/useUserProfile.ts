@@ -17,8 +17,12 @@ export function useUserProfile(login: string) {
 		const controller = new AbortController();
 
 		fetchUserProfile(login, controller.signal)
-			.then((data) => setUser(data))
+			.then((data) => {
+				if (controller.signal.aborted) return;
+				setUser(data);
+			})
 			.catch((err) => {
+				if (controller.signal.aborted) return;
 				if (err?.message === "Request aborted" || err?.name === "AbortError") {
 					return;
 				}

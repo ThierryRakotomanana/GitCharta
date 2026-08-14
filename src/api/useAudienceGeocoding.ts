@@ -27,6 +27,7 @@ export function useAudienceGeocoding(
 
 	useEffect(() => {
 		if (startedForRef.current === resetKey) return;
+		startedForRef.current = undefined;
 		setAudience(null);
 		setStatus("idle");
 		setProgress({ done: 0, total: 0 });
@@ -53,7 +54,7 @@ export function useAudienceGeocoding(
 			controller.signal
 		)
 			.then((result) => {
-				if (!result) return;
+				if (!result || controller.signal.aborted) return;
 				const { profileCountryMap } = result;
 				const attachCountry = (profiles: ProfileNode[]): LocalizedProfile[] =>
 					profiles.map((p) => ({
@@ -75,7 +76,10 @@ export function useAudienceGeocoding(
 				});
 				setStatus("done");
 			})
-			.catch(() => setStatus("error"));
+			.catch(() => {
+				if (controller.signal.aborted) return;
+				setStatus("error");
+			});
 
 		return () => controller.abort();
 	}, [followersResult, followingResult, resetKey]);

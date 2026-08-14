@@ -48,8 +48,22 @@ function messageForCreateFailure(err: unknown): {
 	return { message: "Failed to start the fetch.", resetAt: null };
 }
 
-export function delay(ms: number): Promise<void> {
-	return new Promise((resolve) => setTimeout(resolve, ms));
+export function delay(ms: number, signal?: AbortSignal): Promise<void> {
+	return new Promise((resolve) => {
+		if (signal?.aborted) {
+			resolve();
+			return;
+		}
+		const timeoutId = setTimeout(resolve, ms);
+		signal?.addEventListener(
+			"abort",
+			() => {
+				clearTimeout(timeoutId);
+				resolve();
+			},
+			{ once: true }
+		);
+	});
 }
 
 export function useAudienceJob(
@@ -63,6 +77,7 @@ export function useAudienceJob(
 	const jobIdRef = useRef<string | null>(null);
 	const failureStreakRef = useRef(0);
 	const generationRef = useRef(0);
+	const abortRef = useRef<AbortController | null>(null);
 
 	const isCurrent = useCallback(
 		(generation: number) =>
@@ -153,7 +168,7 @@ export function useAudienceJob(
 						jobStorage.clear(login, type);
 						return;
 					}
-					await delay(POLL_INTERVAL_MS);
+					await delay(POLL_INTERVAL_MS, abortRef.current?.signal);
 				} catch (err) {
 					if (!isCurrent(generation)) return;
 					if (err instanceof ApiError && err.isAborted) return;
@@ -184,7 +199,7 @@ export function useAudienceJob(
 						POLL_INTERVAL_MS * 2 ** failureStreakRef.current,
 						MAX_BACKOFF_MS
 					);
-					await delay(backoff);
+					await delay(backoff, abortRef.current?.signal);
 				}
 			}
 		},
@@ -193,6 +208,7 @@ export function useAudienceJob(
 
 	const cancel = useCallback(async () => {
 		generationRef.current += 1;
+		abortRef.current?.abort();
 		const jobId = jobIdRef.current;
 		jobStorage.clear(login, type);
 		if (!jobId) {
@@ -227,11 +243,14 @@ export function useAudienceJob(
 
 	const stopPolling = useCallback(() => {
 		generationRef.current += 1;
+		abortRef.current?.abort();
 	}, []);
 
 	const restart = useCallback(() => {
 		generationRef.current += 1;
+		abortRef.current?.abort();
 		const generation = generationRef.current;
+		abortRef.current = new AbortController();
 		jobIdRef.current = null;
 		failureStreakRef.current = 0;
 		jobStorage.clear(login, type);
@@ -245,6 +264,7 @@ export function useAudienceJob(
 			return;
 		}
 		generationRef.current += 1;
+		abortRef.current = new AbortController();
 		void runLifecycle(generationRef.current);
 
 		return () => {
