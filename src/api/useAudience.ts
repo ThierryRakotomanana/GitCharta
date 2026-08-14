@@ -51,12 +51,12 @@ export function useAudience(credentials: Credentials) {
 
 	const followersPhase = followersJob.phase;
 	const followingPhase = followingJob.phase;
-	const followersCount = followersJob.job?.result?.nodes.length ?? 0;
-	const followingCount = followingJob.job?.result?.nodes.length ?? 0;
+	const followersCount = followersJob.job?.result?.nodes?.length ?? 0;
+	const followingCount = followingJob.job?.result?.nodes?.length ?? 0;
 	const followersProgressDone = followersJob.job?.progress.done ?? 0;
 	const followingProgressDone = followingJob.job?.progress.done ?? 0;
 	const followingStage = followingJob.job?.progress.stage ?? "graphql";
-	const recoveredCount = followingJob.job?.result?.recoveredLogins.length ?? 0;
+	const recoveredCount = followingJob.job?.result?.recoveredLogins?.length ?? 0;
 
 	const steps: Step[] = useMemo(
 		() =>
