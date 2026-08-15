@@ -8,7 +8,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 export default defineConfig([
 	globalIgnores(["dist"]),
 	{
-		ignores: ["**/src/components/ui/**/*"]
+		ignores: ["**/src/shared/components/ui/**/*"]
 	},
 	{
 		files: ["**/*.{ts,tsx}"],
