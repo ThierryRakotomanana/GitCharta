@@ -9,12 +9,12 @@ import { useCountryPaths, type WorldGeoJson } from "@/hooks/useCountryPaths";
 import { useHeatScale } from "@/hooks/useHeatScale";
 import { useProfilesByCountry } from "@/hooks/useProfilesByCountry";
 import { getRegionName } from "@/lib/region";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { useGlobeRotation } from "@/hooks/useGlobeRotation";
 import { useMapZoom } from "@/hooks/useMapZoom";
-import { ZoomControls } from "@/components/ZoomControls";
-import { CountryFlag } from "@/components/CountryFlag";
-import { Badge } from "@/components/ui/badge";
+import { ZoomControls } from "@/features/map/components/ZoomControls";
+import { CountryFlag } from "@/shared/components/CountryFlag";
+import { Badge } from "@/shared/components/ui/badge";
 import type { UserProfileResponse } from "@/api/api.type";
 
 export type MAP_MODE = "GLOBE" | "SPHERE";
