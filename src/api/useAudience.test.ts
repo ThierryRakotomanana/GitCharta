@@ -17,8 +17,8 @@ import type {
 	ProfileNode,
 	UserProfileResponse
 } from "../api/api.type";
-import type { GeocodeResult } from "../lib/geocode";
-import { geocode } from "../lib/geocode";
+import type { GeocodeResult } from "../shared/lib/geocode";
+import { geocode } from "../shared/lib/geocode";
 
 const BASE = "http://localhost:8080";
 

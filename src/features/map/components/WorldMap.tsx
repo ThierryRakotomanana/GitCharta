@@ -1,14 +1,14 @@
 import { useMemo, useRef, useState } from "react";
 import type { LocalizedProfile } from "@/api/api.type";
 import { useGeoJson } from "@/hooks/useGeoJson";
-import { MAP_BASE_STYLING } from "@/lib/getCountryColor";
+import { MAP_BASE_STYLING } from "@/shared/lib/getCountryColor";
 import { Camera, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { useMapStats } from "@/hooks/useMapStats";
 import { useMapSnapshot } from "@/hooks/useMapSnapshot";
 import { useCountryPaths, type WorldGeoJson } from "@/hooks/useCountryPaths";
 import { useHeatScale } from "@/hooks/useHeatScale";
 import { useProfilesByCountry } from "@/hooks/useProfilesByCountry";
-import { getRegionName } from "@/lib/region";
+import { getRegionName } from "@/shared/lib/region";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { useGlobeRotation } from "@/hooks/useGlobeRotation";
 import { useMapZoom } from "@/hooks/useMapZoom";

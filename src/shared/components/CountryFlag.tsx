@@ -1,7 +1,7 @@
 import { memo, type ComponentType, type SVGProps } from "react";
 import * as Flags from "country-flag-icons/react/3x2";
 import { hasFlag } from "country-flag-icons";
-import { getRegionName } from "@/lib/region";
+import { getRegionName } from "@/shared/lib/region";
 
 interface CountryFlagProps {
 	isoCode: string;

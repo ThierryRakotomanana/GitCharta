@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { geocode } from "../lib/geocode";
-import { UNKNOWN_REGION } from "../lib/region";
+import { geocode } from "../shared/lib/geocode";
+import { UNKNOWN_REGION } from "../shared/lib/region";
 import type { AudienceJob, LocalizedProfile, ProfileNode } from "./api.type";
 
 export type AudienceData = {

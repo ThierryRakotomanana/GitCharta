@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { getRegionName, UNKNOWN_REGION } from "@/lib/region";
+import { getRegionName, UNKNOWN_REGION } from "@/shared/lib/region";
 import type { LocalizedProfile } from "@/api/api.type";
 
 export type MapStats = {

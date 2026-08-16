@@ -1,6 +1,6 @@
 import { CountryFlag } from "@/shared/components/CountryFlag";
-import { UNKNOWN_REGION } from "@/lib/region";
-import { cn } from "@/lib/utils";
+import { UNKNOWN_REGION } from "@/shared/lib/region";
+import { cn } from "@/shared/lib/utils";
 import { Globe2 } from "lucide-react";
 
 export function RegionIcon({

@@ -8,9 +8,9 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ExternalLink, Search, X } from "lucide-react";
 import { CountryFlag } from "@/shared/components/CountryFlag";
-import { getRegionName, UNKNOWN_REGION } from "@/lib/region";
+import { getRegionName, UNKNOWN_REGION } from "@/shared/lib/region";
 import { Badge } from "@/shared/components/ui/badge";
-import { getCountryColor } from "@/lib/getCountryColor";
+import { getCountryColor } from "@/shared/lib/getCountryColor";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Input } from "@/shared/components/ui/input";
 import { RegionIcon } from "@/components/RegionIcon.Panel";
