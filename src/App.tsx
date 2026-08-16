@@ -3,26 +3,26 @@ import CredentialForm from "./components/CredentialForm";
 import LandingPage from "@/components/LandingPage";
 import { LoadingView } from "./components/LoadingView";
 import { ErrorView } from "@/components/ErrorView";
-import { WorldMap } from "@/components/WorldMap";
-import { CountryList } from "@/components/CountryList";
+import { WorldMap } from "@/features/map/components/WorldMap";
+import { CountryList } from "@/features/leaderboard/components/CountryList";
 import { useAudience } from "./api/useAudience";
 import { useElementSize } from "./hooks/useElementSize";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+} from "@/shared/components/ui/dropdown-menu";
 import {
 	Sheet,
 	SheetContent,
 	SheetHeader,
 	SheetTitle,
 	SheetTrigger
-} from "@/components/ui/sheet";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+} from "@/shared/components/ui/sheet";
+import { Alert, AlertTitle, AlertDescription } from "@/shared/components/ui/alert";
 import {
 	AlertTriangle,
 	ArrowRightLeft,
@@ -34,8 +34,8 @@ import {
 	WifiOff,
 	Workflow
 } from "lucide-react";
-import { GithubIcon } from "@/components/icons/lucide-github";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { GithubIcon } from "@/shared/components/icons/lucide-github";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import type { Credentials } from "@/api/api.type";
 
 type AudienceType = "followers" | "following" | "ghosts";

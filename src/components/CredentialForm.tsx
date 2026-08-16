@@ -1,11 +1,16 @@
 import { useState, type FormEvent } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import {
+	Card,
+	CardContent,
+	CardFooter,
+	CardHeader
+} from "@/shared/components/ui/card";
+import { Badge } from "@/shared/components/ui/badge";
+import { Checkbox } from "@/shared/components/ui/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import {
 	Eye,
 	EyeOff,
@@ -15,7 +20,7 @@ import {
 	ExternalLink,
 	ArrowRight
 } from "lucide-react";
-import { GithubIcon } from "@/components/icons/lucide-github";
+import { GithubIcon } from "@/shared/components/icons/lucide-github";
 import type { Credentials } from "@/api/api.type";
 
 const REQUIRED_SCOPES = ["read:user", "read:followers"] as const;

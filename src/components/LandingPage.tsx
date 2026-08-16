@@ -15,9 +15,9 @@ import {
 	Users,
 	ZoomIn
 } from "lucide-react";
-import { GithubIcon } from "@/components/icons/lucide-github";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { GithubIcon } from "@/shared/components/icons/lucide-github";
+import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent } from "@/shared/components/ui/card";
 
 const PRODUCT_NAME = "GitCharta";
 const AUTHOR_NAME = "Thierry";

@@ -9,7 +9,7 @@ import {
 	type GeoStream
 } from "d3-geo";
 import type { Geometry } from "geojson";
-import type { MAP_MODE } from "@/components/WorldMap";
+import type { MAP_MODE } from "@/features/map/components/WorldMap";
 
 interface GeoProperties {
 	NAME_EN: string;

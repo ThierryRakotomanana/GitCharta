@@ -14,7 +14,7 @@ import { getCountryColor } from "@/lib/getCountryColor";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Input } from "@/shared/components/ui/input";
 import { RegionIcon } from "@/components/RegionIcon.Panel";
-import { EmptyState } from "@/components/EmptyState.Panel";
+import { EmptyState } from "@/features/leaderboard/components/EmptyState.Panel";
 import type { LocalizedProfile } from "@/api/api.type";
 
 interface CountryListProps {

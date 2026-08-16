@@ -1,4 +1,4 @@
-import { CountryFlag } from "@/components/CountryFlag";
+import { CountryFlag } from "@/shared/components/CountryFlag";
 import { UNKNOWN_REGION } from "@/lib/region";
 import { cn } from "@/lib/utils";
 import { Globe2 } from "lucide-react";
