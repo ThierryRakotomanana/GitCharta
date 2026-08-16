@@ -7,12 +7,12 @@ import {
 } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ExternalLink, Search, X } from "lucide-react";
-import { CountryFlag } from "@/components/CountryFlag";
+import { CountryFlag } from "@/shared/components/CountryFlag";
 import { getRegionName, UNKNOWN_REGION } from "@/lib/region";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/components/ui/badge";
 import { getCountryColor } from "@/lib/getCountryColor";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Input } from "@/shared/components/ui/input";
 import { RegionIcon } from "@/components/RegionIcon.Panel";
 import { EmptyState } from "@/components/EmptyState.Panel";
 import type { LocalizedProfile } from "@/api/api.type";
