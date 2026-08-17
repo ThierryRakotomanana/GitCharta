@@ -13,7 +13,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { getCountryColor } from "@/shared/lib/getCountryColor";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Input } from "@/shared/components/ui/input";
-import { RegionIcon } from "@/components/RegionIcon.Panel";
+import { RegionIcon } from "@/features/leaderboard/components/RegionIcon.Panel";
 import { EmptyState } from "@/features/leaderboard/components/EmptyState.Panel";
 import type { LocalizedProfile } from "@/api/api.type";
 
