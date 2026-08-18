@@ -1,19 +1,6 @@
+import type { ProfileNode } from "@/shared/api/api.types";
+
 export type AudienceType = "followers" | "following";
-
-export interface ProfileNode {
-	login: string;
-	id: string;
-	name: string | null;
-	avatarUrl: string;
-	url: string;
-	company: string | null;
-	location: string | null;
-	twitterUsername: string | null;
-	isSiteAdmin: boolean;
-}
-
-export type LocalizedProfile = ProfileNode & { country: string };
-export type Credentials = { user: string };
 
 export type ReconcileStage = "graphql" | "rest" | "backfill";
 
@@ -62,18 +49,4 @@ const TERMINAL_STATUSES: ReadonlySet<JobStatus> = new Set([
 
 export function isTerminalStatus(status: JobStatus): boolean {
 	return TERMINAL_STATUSES.has(status);
-}
-
-export interface UserProfileResponse {
-	login: string;
-	name: string | null;
-	avatarUrl: string;
-	url: string;
-	followersCount: number;
-	followingCount: number;
-}
-
-export interface ApiErrorBody {
-	error: string;
-	resetAt?: string;
 }

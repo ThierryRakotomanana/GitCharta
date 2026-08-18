@@ -8,7 +8,7 @@ import {
 	cancelAudienceJob,
 	isValidLogin
 } from "./jobs";
-import { jobStorage } from "./jobStorage";
+import { jobStorage } from "../features/audience/api/jobStorage";
 import { ApiError } from "@/api/api.errors";
 import type { AudienceJob } from "./api.type";
 

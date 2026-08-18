@@ -13,7 +13,7 @@ import {
 import { setupServer } from "msw/node";
 import { http, HttpResponse, delay } from "msw";
 import { useUserProfile } from "./useUserProfile";
-import { requestQueue } from "./requestQueue";
+import { requestQueue } from "../shared/api/requestQueue";
 
 const server = setupServer();
 

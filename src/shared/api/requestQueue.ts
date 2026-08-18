@@ -1,5 +1,5 @@
-import { ApiError } from "@/api/api.errors";
-import type { ApiErrorBody } from "./api.type";
+import { ApiError } from "@/shared/api/apiError";
+import type { ApiErrorBody } from "../../api/api.type";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 

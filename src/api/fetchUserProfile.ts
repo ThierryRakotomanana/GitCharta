@@ -1,4 +1,4 @@
-import { apiRequest } from "./requestQueue";
+import { apiRequest } from "../shared/api/requestQueue";
 import type { UserProfileResponse } from "./api.type";
 import { API_BASE_URL } from "@/config";
 
