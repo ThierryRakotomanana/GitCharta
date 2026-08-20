@@ -12,8 +12,11 @@ import {
 } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse, delay } from "msw";
-import { useUserProfile } from "./useUserProfile";
-import { requestQueue } from "../shared/api/requestQueue";
+import { requestQueue } from "@/shared/api/requestQueue";
+import {
+	useUserProfile,
+	profileCache
+} from "@/features/user-profile/hooks/useUserProfile";
 
 const server = setupServer();
 
@@ -21,6 +24,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 
 beforeEach(() => {
 	requestQueue.reset();
+	profileCache.clear();
 });
 
 afterEach(() => {

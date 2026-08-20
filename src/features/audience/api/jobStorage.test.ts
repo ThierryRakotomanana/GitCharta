@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { jobStorage } from "@/features/audience/api/jobStorage";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { jobStorage } from "./jobStorage";
 
 describe("jobStorage Service", () => {
 	beforeEach(() => {

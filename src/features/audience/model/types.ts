@@ -1,4 +1,4 @@
-import type { ProfileNode } from "@/shared/api/api.types";
+import type { ProfileNode } from "@/shared/api/types";
 
 export type AudienceType = "followers" | "following";
 
@@ -35,7 +35,7 @@ export interface AudienceJob {
 	type: AudienceType;
 	progress: JobProgress;
 	result: ReconciledAudienceResult | null;
-	error: string;
+	error: string | null;
 	createdAt: string;
 	updatedAt: string;
 }

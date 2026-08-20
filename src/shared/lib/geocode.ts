@@ -1,8 +1,8 @@
-import type { ProfileNode } from "@/api/api.type";
+import type { ProfileNode } from "@/shared/api/types";
 import { CN } from "../constants/countries";
 import { CDICT } from "../constants/lookupTables";
 import { SKIP } from "../constants/unlocated";
-import { delay } from "@/api/useAudienceJob";
+import { delay } from "@/features/audience/hooks/useAudienceJob";
 
 export type GeocodeResult = {
 	usersByCountry: Map<string, ProfileNode[]>;

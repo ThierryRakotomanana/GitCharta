@@ -5,7 +5,6 @@ import { LoadingView } from "./components/LoadingView";
 import { ErrorView } from "@/components/ErrorView";
 import { WorldMap } from "@/features/map/components/WorldMap";
 import { CountryList } from "@/features/leaderboard/components/CountryList";
-import { useAudience } from "./api/useAudience";
 import { useElementSize } from "./hooks/useElementSize";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Button } from "@/shared/components/ui/button";
@@ -36,7 +35,8 @@ import {
 } from "lucide-react";
 import { GithubIcon } from "@/shared/components/icons/lucide-github";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
-import type { Credentials } from "@/api/api.type";
+import { useAudience } from "@/features/audience/hooks/useAudience";
+import type { Credentials } from "@/shared/api/types";
 
 type AudienceType = "followers" | "following" | "ghosts";
 

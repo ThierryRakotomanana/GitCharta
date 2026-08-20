@@ -1,9 +1,13 @@
 import { useCallback, useMemo } from "react";
 import { useAudienceJob } from "./useAudienceJob";
 import { useAudienceGeocoding } from "./useAudienceGeocoding";
-import { buildSteps, overallPercent, type Step } from "./audienceProgress";
-import { useUserProfile } from "@/api/useUserProfile";
-import type { Credentials } from "@/api/api.type";
+import type { Credentials } from "@/shared/api/types";
+import { useUserProfile } from "@/features/user-profile/hooks/useUserProfile";
+import {
+	buildSteps,
+	overallPercent,
+	type Step
+} from "@/features/audience/model/audienceProgress";
 
 export type AudienceStatus = "idle" | "loading" | "success" | "error";
 
@@ -27,7 +31,7 @@ export function useAudience(credentials: Credentials) {
 	const anyPartial =
 		followersJob.phase === "partial" || followingJob.phase === "partial";
 
-	const geocodeResetKey = `${followersJob.job?.id ?? ""}:${followingJob.job?.id ?? ""}`;
+	const geocodeResetKey = `${followersJob.job?.id ?? ""}:${followersJob.job?.status ?? ""}:${followingJob.job?.id ?? ""}:${followingJob.job?.status ?? ""}`;
 	const {
 		audience,
 		status: geocodeStatus,
@@ -95,7 +99,7 @@ export function useAudience(credentials: Credentials) {
 	const status: AudienceStatus =
 		!login ? "idle"
 		: anyFailed ? "error"
-		: geocodeStatus === "done" && audience ? "success"
+		: geocodeStatus === "done" && audience && user ? "success"
 		: "loading";
 
 	const connectionIssue =

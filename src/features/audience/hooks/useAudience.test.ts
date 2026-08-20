@@ -12,13 +12,11 @@ import {
 import { renderHook, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import type {
-	AudienceJob,
-	ProfileNode,
-	UserProfileResponse
-} from "../api/api.type";
-import type { GeocodeResult } from "../shared/lib/geocode";
-import { geocode } from "../shared/lib/geocode";
+import type { GeocodeResult } from "../../../shared/lib/geocode";
+import { geocode } from "../../../shared/lib/geocode";
+import type { ProfileNode } from "@/shared/api/types";
+import type { AudienceJob } from "@/features/audience/model/types";
+import type { UserProfileResponse } from "@/features/user-profile/model/type";
 
 const BASE = "http://localhost:8080";
 
@@ -92,7 +90,7 @@ afterAll(() => server.close());
 
 describe("useAudience Integration", () => {
 	it("reaches success with a combined audience once both jobs and geocoding complete", async () => {
-		const { useAudience } = await import("../api/useAudience");
+		const { useAudience } = await import("./useAudience");
 
 		server.use(
 			http.get(`${BASE}/api/user`, () => HttpResponse.json(makeUser())),
@@ -182,7 +180,7 @@ describe("useAudience Integration", () => {
 	}, 15000);
 
 	it("moves to the error status when a job fails, without blocking on geocoding", async () => {
-		const { useAudience } = await import("../api/useAudience");
+		const { useAudience } = await import("./useAudience");
 
 		server.use(
 			http.get(`${BASE}/api/user`, () => HttpResponse.json(makeUser())),
@@ -225,7 +223,7 @@ describe("useAudience Integration", () => {
 	}, 15000);
 
 	it("is idle when no login is set", async () => {
-		const { useAudience } = await import("../api/useAudience");
+		const { useAudience } = await import("./useAudience");
 
 		const { result } = renderHook(() => useAudience({ user: "" }));
 

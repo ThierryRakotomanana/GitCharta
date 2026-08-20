@@ -1,4 +1,4 @@
-import type { AudienceType } from "@/features/audience/model/type";
+import type { AudienceType } from "../model/types";
 
 function storageKey(login: string, type: AudienceType): string {
 	return `audience-job:${login}:${type}`;

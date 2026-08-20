@@ -1,5 +1,5 @@
-import { ApiError } from "@/shared/api/apiError";
-import type { ApiErrorBody } from "../../api/api.type";
+import { ApiError } from "./apiError";
+import type { ApiErrorBody } from "./types";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -89,7 +89,7 @@ export class RequestQueue {
 						const backoff =
 							err.retryAfterMs ?? this.minIntervalMs * 2 ** item.attempts;
 						this.notBeforeMs = Date.now() + backoff;
-						this.items.unshift(item);
+						this.items.push(item);
 						continue;
 					}
 					this.notBeforeMs = Date.now() + this.minIntervalMs;

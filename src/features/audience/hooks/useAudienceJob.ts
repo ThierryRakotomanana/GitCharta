@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-	createAudienceJob,
-	getAudienceJob,
-	cancelAudienceJob,
-	isValidLogin
-} from "./jobs";
-import { jobStorage } from "../features/audience/api/jobStorage";
-import type { AudienceJob, AudienceType } from "./api.type";
-import { isTerminalStatus } from "./api.type";
-import { ApiError } from "@/api/api.errors";
+import { githubAudienceService } from "../api/audienceService";
+import { isValidLogin } from "../model/validateLogin";
+import { jobStorage } from "../api/jobStorage";
+import type { AudienceJob, AudienceType } from "../model/types";
+import { isTerminalStatus } from "../model/types";
+import { ApiError } from "@/shared/api/apiError";
+import { createResourceCache } from "@/shared/lib/createResourceCache";
 
 const POLL_INTERVAL_MS = 2000;
 const MAX_BACKOFF_MS = 30_000;
@@ -31,6 +28,12 @@ const initialState: AudienceJobState = {
 	error: null,
 	resetAt: null
 };
+
+export const completedJobCache = createResourceCache<AudienceJob>();
+
+function cacheKey(login: string, type: AudienceType): string {
+	return `${login.toLowerCase()}:${type}`;
+}
 
 function messageForCreateFailure(err: unknown): {
 	message: string;
@@ -71,7 +74,19 @@ export function useAudienceJob(
 	type: AudienceType,
 	enabled: boolean
 ) {
-	const [state, setState] = useState<AudienceJobState>(initialState);
+	const cached = login ? completedJobCache.get(cacheKey(login, type)) : undefined;
+
+	const [state, setState] = useState<AudienceJobState>(() =>
+		cached ?
+			{
+				phase: cached.status,
+				job: cached,
+				connectionIssue: false,
+				error: null,
+				resetAt: null
+			}
+		:	initialState
+	);
 
 	const mountedRef = useRef(true);
 	const jobIdRef = useRef<string | null>(null);
@@ -86,7 +101,22 @@ export function useAudienceJob(
 	);
 
 	const runLifecycle = useCallback(
-		async (generation: number, notice?: string): Promise<void> => {
+		async (
+			generation: number,
+			notice?: string,
+			restartCount = 0
+		): Promise<void> => {
+			if (restartCount > 3) {
+				setState({
+					phase: "error",
+					job: null,
+					connectionIssue: false,
+					error: "Job repeatedly expired — please try again later.",
+					resetAt: null
+				});
+				return;
+			}
+
 			if (!isValidLogin(login)) {
 				setState({
 					phase: "error",
@@ -118,9 +148,9 @@ export function useAudienceJob(
 					resetAt: null
 				});
 				try {
-					const job = await createAudienceJob(login, type);
+					const job = await githubAudienceService.createJob(login, type);
 					if (!isCurrent(generation)) {
-						void cancelAudienceJob(job.id).catch(() => {
+						void githubAudienceService.cancelJob(job.id).catch(() => {
 							console.warn("Failed to cancel orphaned audience job:", job.id);
 						});
 						return;
@@ -138,6 +168,7 @@ export function useAudienceJob(
 
 					if (isTerminalStatus(job.status)) {
 						jobStorage.clear(login, type);
+						completedJobCache.set(cacheKey(login, type), job);
 						return;
 					}
 					jobStorage.write(login, type, job.id);
@@ -157,7 +188,7 @@ export function useAudienceJob(
 
 			while (isCurrent(generation)) {
 				try {
-					const job = await getAudienceJob(jobId);
+					const job = await githubAudienceService.getJob(jobId);
 					if (!isCurrent(generation)) return;
 
 					failureStreakRef.current = 0;
@@ -171,6 +202,7 @@ export function useAudienceJob(
 
 					if (isTerminalStatus(job.status)) {
 						jobStorage.clear(login, type);
+						completedJobCache.set(cacheKey(login, type), job);
 						return;
 					}
 					await delay(POLL_INTERVAL_MS, abortRef.current?.signal);
@@ -183,7 +215,8 @@ export function useAudienceJob(
 						jobIdRef.current = null;
 						return runLifecycle(
 							generation,
-							"Previous job expired — restarting fetch…"
+							"Previous job expired — restarting fetch…",
+							restartCount + 1
 						);
 					}
 
@@ -216,12 +249,13 @@ export function useAudienceJob(
 		abortRef.current?.abort();
 		const jobId = jobIdRef.current;
 		jobStorage.clear(login, type);
+		completedJobCache.delete(cacheKey(login, type));
 		if (!jobId) {
 			setState(initialState);
 			return;
 		}
 		try {
-			await cancelAudienceJob(jobId);
+			await githubAudienceService.cancelJob(jobId);
 		} catch (err) {
 			if (err instanceof ApiError && (err.status === 409 || err.status === 404)) {
 				return;
@@ -259,6 +293,7 @@ export function useAudienceJob(
 		jobIdRef.current = null;
 		failureStreakRef.current = 0;
 		jobStorage.clear(login, type);
+		completedJobCache.delete(cacheKey(login, type));
 		void runLifecycle(generation);
 	}, [login, type, runLifecycle]);
 
@@ -268,6 +303,19 @@ export function useAudienceJob(
 			setState(initialState);
 			return;
 		}
+
+		const existing = completedJobCache.get(cacheKey(login, type));
+		if (existing) {
+			setState({
+				phase: existing.status,
+				job: existing,
+				connectionIssue: false,
+				error: null,
+				resetAt: null
+			});
+			return;
+		}
+
 		generationRef.current += 1;
 		abortRef.current = new AbortController();
 		failureStreakRef.current = 0;

@@ -1,12 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
-import {
-	isValidLogin,
-	createAudienceJob,
-	getAudienceJob,
-	cancelAudienceJob
-} from "./jobs";
+import { createAudienceJob, getAudienceJob, cancelAudienceJob } from "./endpoints";
+import { isValidLogin } from "@/features/audience/model/validateLogin";
 
 const server = setupServer();
 
@@ -14,7 +10,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe("jobs Service", () => {
+describe("audienceService Service", () => {
 	describe("isValidLogin", () => {
 		it("should validate GitHub usernames correctly according to pattern constraints", () => {
 			expect(isValidLogin("octocat")).toBe(true);

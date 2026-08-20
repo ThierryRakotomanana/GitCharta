@@ -1,14 +1,18 @@
-import type { AudienceJob, ReconcileStage } from "./api.type";
-import type { JobPhase } from "./useAudienceJob";
-import type { GeocodeStatus, AudienceData } from "./useAudienceGeocoding";
+import type { AudienceJob, ReconcileStage } from "./types";
+import type { JobPhase } from "../hooks/useAudienceJob";
+import type { GeocodeStatus, AudienceData } from "../hooks/useAudienceGeocoding";
 
-export type StepId = "fetch" | "geocode" | "done";
-export type Step = {
-	id: StepId;
+export type ProgressStepStatus = "idle" | "active" | "done" | "error";
+
+export type ProgressStep = {
+	id: string;
 	label: string;
-	status: "idle" | "active" | "done" | "error";
+	status: ProgressStepStatus;
 	detail: string;
 };
+
+export type StepId = "fetch" | "geocode" | "done";
+export type Step = ProgressStep & { id: StepId };
 
 const STAGE_LABEL: Record<ReconcileStage, string> = {
 	graphql: "",
