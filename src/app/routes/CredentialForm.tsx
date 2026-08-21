@@ -21,7 +21,7 @@ import {
 	ArrowRight
 } from "lucide-react";
 import { GithubIcon } from "@/shared/components/icons/lucide-github";
-import type { Credentials } from "@/api/api.type";
+import type { Credentials } from "@/shared/api/types";
 
 const REQUIRED_SCOPES = ["read:user", "read:followers"] as const;
 const UNFOLLOW_SCOPE = "user:follow";

@@ -1,11 +1,8 @@
 import { useReducer, useState } from "react";
-import CredentialForm from "./components/CredentialForm";
-import LandingPage from "@/components/LandingPage";
-import { LoadingView } from "./components/LoadingView";
-import { ErrorView } from "@/components/ErrorView";
+import LandingPage from "@/app/routes/LandingPage";
+import { ErrorView } from "@/app/routes/ErrorView";
 import { WorldMap } from "@/features/map/components/WorldMap";
 import { CountryList } from "@/features/leaderboard/components/CountryList";
-import { useElementSize } from "./hooks/useElementSize";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -37,6 +34,9 @@ import { GithubIcon } from "@/shared/components/icons/lucide-github";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { useAudience } from "@/features/audience/hooks/useAudience";
 import type { Credentials } from "@/shared/api/types";
+import CredentialForm from "@/app/routes/CredentialForm";
+import { LoadingView } from "@/app/routes/LoadingView";
+import { useElementSize } from "@/hooks/useElementSize";
 
 type AudienceType = "followers" | "following" | "ghosts";
 
