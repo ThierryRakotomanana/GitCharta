@@ -12,15 +12,14 @@ import {
 import { renderHook, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import type { GeocodeResult } from "../../../shared/lib/geocode";
-import { geocode } from "../../../shared/lib/geocode";
 import type { ProfileNode } from "@/shared/api/types";
 import type { AudienceJob } from "@/features/audience/model/types";
 import type { UserProfileResponse } from "@/features/user-profile/model/type";
+import { geocode, type GeocodeResult } from "@/shared/lib/geocode";
 
 const BASE = "http://localhost:8080";
 
-vi.mock("../lib/geocode", () => ({
+vi.mock("@/shared/lib/geocode", () => ({
 	geocode: vi.fn()
 }));
 
