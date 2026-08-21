@@ -3,7 +3,7 @@ import LandingPage from "@/app/routes/LandingPage";
 import { ErrorView } from "@/app/routes/ErrorView";
 import { WorldMap } from "@/features/map/components/WorldMap";
 import { CountryList } from "@/features/leaderboard/components/CountryList";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import { Button } from "@/shared/components/ui/button";
 import {
 	DropdownMenu,
@@ -36,7 +36,7 @@ import { useAudience } from "@/features/audience/hooks/useAudience";
 import type { Credentials } from "@/shared/api/types";
 import CredentialForm from "@/app/routes/CredentialForm";
 import { LoadingView } from "@/app/routes/LoadingView";
-import { useElementSize } from "@/hooks/useElementSize";
+import { useElementSize } from "@/shared/hooks/useElementSize";
 
 type AudienceType = "followers" | "following" | "ghosts";
 

@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { geoCentroid } from "d3-geo";
-import type { CountryFeature, WorldGeoJson } from "@/hooks/useCountryPaths";
+import type {
+	CountryFeature,
+	WorldGeoJson
+} from "@/features/map/hooks/useCountryPaths";
 
 const ANIMATION_MS = 750;
 

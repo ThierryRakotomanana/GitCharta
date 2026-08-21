@@ -2,7 +2,7 @@ import { Progress } from "@/shared/components/ui/progress";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { CheckCircle2, Loader2, CircleDashed } from "lucide-react";
-import type { Step } from "@/api/audienceProgress";
+import type { Step } from "@/features/audience/model/audienceProgress";
 
 function StepIcon({ status }: { status: Step["status"] }) {
 	if (status === "done") {

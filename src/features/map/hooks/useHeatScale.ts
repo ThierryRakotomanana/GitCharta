@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { scaleLog } from "d3-scale";
-import type { LocalizedProfile } from "@/api/api.type";
+import type { LocalizedProfile } from "@/shared/api/types";
 
 export function useHeatScale(
 	profilesByCountry: Map<string, LocalizedProfile[]>

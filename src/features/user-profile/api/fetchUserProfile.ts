@@ -1,5 +1,5 @@
+import type { UserProfileResponse } from "@/features/user-profile";
 import { apiClient } from "@/shared/api/client";
-import type { UserProfileResponse } from "../model/types";
 
 export function fetchUserProfile(
 	login: string,

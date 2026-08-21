@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avat
 import { Input } from "@/shared/components/ui/input";
 import { RegionIcon } from "@/features/leaderboard/components/RegionIcon.Panel";
 import { EmptyState } from "@/features/leaderboard/components/EmptyState.Panel";
-import type { LocalizedProfile } from "@/api/api.type";
+import type { LocalizedProfile } from "@/shared/api/types";
 
 interface CountryListProps {
 	data: LocalizedProfile[];
@@ -74,21 +74,35 @@ export function CountryList({
 		}, new Map<string, LocalizedProfile[]>());
 	}, [data]);
 
-	const sortedCountries = useMemo(() => {
-		return Array.from(usersByCountry.entries())
+	const sortedCountries: [string, LocalizedProfile[]][] = useMemo(() => {
+		const entries = Array.from(usersByCountry.entries()) as [
+			string,
+			LocalizedProfile[]
+		][];
+
+		return entries
 			.filter(([code]) => code !== UNKNOWN_REGION)
-			.sort((a, b) => b[1].length - a[1].length);
+			.sort(
+				(a: [string, LocalizedProfile[]], b: [string, LocalizedProfile[]]) =>
+					b[1].length - a[1].length
+			);
 	}, [usersByCountry]);
 
-	const maxCount = useMemo(
-		() => Math.max(1, ...sortedCountries.map(([, profiles]) => profiles.length)),
+	const maxCount: number = useMemo(
+		() =>
+			Math.max(
+				1,
+				...sortedCountries.map(
+					([, profiles]: [string, LocalizedProfile[]]) => profiles.length
+				)
+			),
 		[sortedCountries]
 	);
 
 	const unknownCount = usersByCountry.get(UNKNOWN_REGION)?.length ?? 0;
 	const locatedCount = totalFollowers - unknownCount;
 
-	const filteredCountries = useMemo(() => {
+	const filteredCountries: [string, LocalizedProfile[]][] = useMemo(() => {
 		if (!deferredSearch.trim()) return sortedCountries;
 		const q = deferredSearch.trim().toLowerCase();
 		return sortedCountries.filter(([code]) =>

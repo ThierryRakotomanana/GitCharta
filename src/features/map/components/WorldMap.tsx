@@ -1,21 +1,24 @@
 import { useMemo, useRef, useState } from "react";
-import type { LocalizedProfile } from "@/api/api.type";
-import { useGeoJson } from "@/hooks/useGeoJson";
+import { useGeoJson } from "@/features/map/hooks/useGeoJson";
 import { MAP_BASE_STYLING } from "@/shared/lib/getCountryColor";
 import { Camera, Check, ChevronDown, ChevronUp } from "lucide-react";
-import { useMapStats } from "@/hooks/useMapStats";
-import { useMapSnapshot } from "@/hooks/useMapSnapshot";
-import { useCountryPaths, type WorldGeoJson } from "@/hooks/useCountryPaths";
-import { useHeatScale } from "@/hooks/useHeatScale";
-import { useProfilesByCountry } from "@/hooks/useProfilesByCountry";
+import { useMapStats } from "@/features/map/hooks/useMapStats";
+import { useMapSnapshot } from "@/features/map/hooks/useMapSnapshot";
+import {
+	useCountryPaths,
+	type WorldGeoJson
+} from "@/features/map/hooks/useCountryPaths";
+import { useHeatScale } from "@/features/map/hooks/useHeatScale";
+import { useProfilesByCountry } from "@/features/map/hooks/useProfilesByCountry";
 import { getRegionName } from "@/shared/lib/region";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
-import { useGlobeRotation } from "@/hooks/useGlobeRotation";
-import { useMapZoom } from "@/hooks/useMapZoom";
+import { useGlobeRotation } from "@/features/map/hooks/useGlobeRotation";
+import { useMapZoom } from "@/features/map/hooks/useMapZoom";
 import { ZoomControls } from "@/features/map/components/ZoomControls";
 import { CountryFlag } from "@/shared/components/CountryFlag";
 import { Badge } from "@/shared/components/ui/badge";
-import type { UserProfileResponse } from "@/api/api.type";
+import type { UserProfileResponse } from "@/features/user-profile";
+import type { LocalizedProfile } from "@/shared/api/types";
 
 export type MAP_MODE = "GLOBE" | "SPHERE";
 

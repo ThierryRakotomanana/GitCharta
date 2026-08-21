@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { getRegionName, UNKNOWN_REGION } from "@/shared/lib/region";
-import type { LocalizedProfile } from "@/api/api.type";
+import type { LocalizedProfile } from "@/shared/api/types";
 
 export type MapStats = {
 	coveragePct: number;
