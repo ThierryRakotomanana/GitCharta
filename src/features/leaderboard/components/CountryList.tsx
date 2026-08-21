@@ -1,0 +1,351 @@
+import {
+	useDeferredValue,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState
+} from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { ExternalLink, Search, X } from "lucide-react";
+import { CountryFlag } from "@/shared/components/CountryFlag";
+import { getRegionName, UNKNOWN_REGION } from "@/shared/lib/region";
+import { Badge } from "@/shared/components/ui/badge";
+import { getCountryColor } from "@/shared/lib/getCountryColor";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Input } from "@/shared/components/ui/input";
+import { RegionIcon } from "@/features/leaderboard/components/RegionIcon.Panel";
+import { EmptyState } from "@/features/leaderboard/components/EmptyState.Panel";
+import type { LocalizedProfile } from "@/shared/api/types";
+
+interface CountryListProps {
+	data: LocalizedProfile[];
+	country: string | null;
+	setCountry: (arg: string | null) => void;
+	label?: string;
+}
+
+const EMPTY_PROFILES: LocalizedProfile[] = [];
+const COUNTRY_ROW_HEIGHT = 58;
+const PROFILE_ROW_HEIGHT = 64;
+
+function formatPercentage(count: number, total: number): string {
+	if (count <= 0 || total <= 0) return "0%";
+	const pct = (count / total) * 100;
+	if (pct < 0.1) return "<0.1%";
+	if (pct < 1) return `${pct.toFixed(1)}%`;
+	return `${Math.round(pct)}%`;
+}
+
+function pluralize(count: number, noun: string): string {
+	return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+export function CountryList({
+	data,
+	country,
+	setCountry,
+	label = "follower"
+}: CountryListProps) {
+	const [search, setSearch] = useState("");
+	const [prevCountry, setPrevCountry] = useState(country);
+	const scrollParentRef = useRef<HTMLDivElement>(null);
+
+	if (country !== prevCountry) {
+		setPrevCountry(country);
+		setSearch("");
+	}
+
+	const deferredSearch = useDeferredValue(search);
+
+	useLayoutEffect(() => {
+		if (scrollParentRef.current) {
+			scrollParentRef.current.scrollTop = 0;
+		}
+	}, [country, deferredSearch]);
+
+	const totalFollowers = data.length;
+
+	const usersByCountry = useMemo(() => {
+		return data.reduce((acc, user) => {
+			const code = user.country || UNKNOWN_REGION;
+			const regionalUsers = acc.get(code) || [];
+			regionalUsers.push(user);
+			return acc.set(code, regionalUsers);
+		}, new Map<string, LocalizedProfile[]>());
+	}, [data]);
+
+	const sortedCountries: [string, LocalizedProfile[]][] = useMemo(() => {
+		const entries = Array.from(usersByCountry.entries()) as [
+			string,
+			LocalizedProfile[]
+		][];
+
+		return entries
+			.filter(([code]) => code !== UNKNOWN_REGION)
+			.sort(
+				(a: [string, LocalizedProfile[]], b: [string, LocalizedProfile[]]) =>
+					b[1].length - a[1].length
+			);
+	}, [usersByCountry]);
+
+	const maxCount: number = useMemo(
+		() =>
+			Math.max(
+				1,
+				...sortedCountries.map(
+					([, profiles]: [string, LocalizedProfile[]]) => profiles.length
+				)
+			),
+		[sortedCountries]
+	);
+
+	const unknownCount = usersByCountry.get(UNKNOWN_REGION)?.length ?? 0;
+	const locatedCount = totalFollowers - unknownCount;
+
+	const filteredCountries: [string, LocalizedProfile[]][] = useMemo(() => {
+		if (!deferredSearch.trim()) return sortedCountries;
+		const q = deferredSearch.trim().toLowerCase();
+		return sortedCountries.filter(([code]) =>
+			getRegionName(code).toLowerCase().includes(q)
+		);
+	}, [sortedCountries, deferredSearch]);
+
+	const selectedProfiles = useMemo(
+		() => (country ? (usersByCountry.get(country) ?? EMPTY_PROFILES) : null),
+		[country, usersByCountry]
+	);
+
+	const filteredProfiles = useMemo(() => {
+		if (!selectedProfiles) return EMPTY_PROFILES;
+		if (!deferredSearch.trim()) return selectedProfiles;
+		const q = deferredSearch.trim().toLowerCase();
+		return selectedProfiles.filter((p) => {
+			const loginMatch = p.login.toLowerCase().includes(q);
+			const nameMatch = p.name ? p.name.toLowerCase().includes(q) : false;
+			return loginMatch || nameMatch;
+		});
+	}, [selectedProfiles, deferredSearch]);
+
+	const isProfileView = selectedProfiles !== null;
+	const searchLabel = isProfileView ? `Search ${label}s` : "Search countries";
+	const isUnknownSelected = country === UNKNOWN_REGION;
+
+	const virtualizer = useVirtualizer({
+		count: isProfileView ? filteredProfiles.length : filteredCountries.length,
+		getScrollElement: () => scrollParentRef.current,
+		estimateSize: () => (isProfileView ? PROFILE_ROW_HEIGHT : COUNTRY_ROW_HEIGHT),
+		overscan: 8
+	});
+
+	return (
+		<div className='flex h-full flex-col gap-4 '>
+			<div className='flex items-center justify-between gap-2'>
+				{country ?
+					<div
+						className='flex w-full items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-2'
+						style={
+							isUnknownSelected ? undefined : (
+								{ background: `${getCountryColor(country)}20` }
+							)
+						}>
+						{isUnknownSelected ?
+							<RegionIcon
+								code={country}
+								className='h-5 w-7 shrink-0 rounded-sm border border-border/40'
+							/>
+						:	<CountryFlag
+								isoCode={country}
+								className='h-5 w-7 shrink-0 rounded-sm border border-border/40'
+							/>
+						}
+						<div className='min-w-0 flex items-center gap-2'>
+							<button
+								type='button'
+								onClick={() => setCountry(null)}
+								className='inline-flex min-w-0 items-center gap-2 rounded-full border border-border bg-muted/40 py-1 pl-2 pr-1 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'>
+								<span className='truncate'>{getRegionName(country)}</span>
+								<span className='flex h-4 w-4 items-center justify-center rounded-full text-muted-foreground hover:text-foreground'>
+									<X size={12} />
+								</span>
+							</button>
+							<Badge
+								variant='outline'
+								className='shrink-0 font-mono text-xs font-normal bg-muted/40 text-muted-foreground'>
+								{pluralize(selectedProfiles?.length ?? 0, label)}
+							</Badge>
+						</div>
+					</div>
+				:	<div className='w-full space-y-2'>
+						<div className='flex items-center justify-between gap-2'>
+							<Badge
+								variant='outline'
+								className='shrink-0 font-mono text-xs font-normal bg-muted/40 text-muted-foreground'>
+								{sortedCountries.length} countries
+							</Badge>
+							<span className='shrink-0 font-mono text-xs text-muted-foreground'>
+								{formatPercentage(locatedCount, totalFollowers)} located
+							</span>
+						</div>
+						{unknownCount > 0 && (
+							<button
+								type='button'
+								onClick={() => setCountry(UNKNOWN_REGION)}
+								className='group flex w-full items-center justify-between rounded-lg border border-dashed border-border/50 bg-muted/20 px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40 hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'>
+								<span className='flex min-w-0 items-center gap-3'>
+									<RegionIcon
+										code={UNKNOWN_REGION}
+										className='h-4 w-6 shrink-0 rounded-sm border border-border/40 opacity-70'
+									/>
+									<span className='flex min-w-0 flex-col'>
+										<span className='truncate font-medium text-muted-foreground'>
+											No public location
+										</span>
+										<span className='text-xs font-mono text-muted-foreground'>
+											{formatPercentage(unknownCount, totalFollowers)}
+										</span>
+									</span>
+								</span>
+								<Badge
+									variant='outline'
+									className='shrink-0 font-mono text-xs text-muted-foreground'>
+									{unknownCount}
+								</Badge>
+							</button>
+						)}
+					</div>
+				}
+			</div>
+
+			<div className='relative'>
+				<Search className='pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground' />
+				<label htmlFor='country-list-search' className='sr-only'>
+					{searchLabel}
+				</label>
+				<Input
+					id='country-list-search'
+					value={search}
+					onChange={(e) => setSearch(e.target.value)}
+					placeholder={`${searchLabel}…`}
+					className='h-8 pl-8 text-sm'
+				/>
+			</div>
+
+			<div
+				ref={scrollParentRef}
+				className='scrollbar-thin flex-1 overflow-y-auto pr-2 [scrollbar-color:var(--color-border)_transparent]'>
+				{!isProfileView ?
+					filteredCountries.length > 0 ?
+						<div
+							style={{
+								height: virtualizer.getTotalSize(),
+								position: "relative"
+							}}>
+							{virtualizer.getVirtualItems().map((virtualRow) => {
+								const [code, profiles] = filteredCountries[virtualRow.index];
+								return (
+									<div
+										key={code}
+										style={{
+											position: "absolute",
+											top: 0,
+											left: 0,
+											width: "100%",
+											height: `${virtualRow.size}px`,
+											transform: `translateY(${virtualRow.start}px)`,
+											paddingBottom: "6px"
+										}}>
+										<button
+											type='button'
+											onClick={() => setCountry(code)}
+											className='group relative flex h-full w-full items-center justify-between rounded-md px-3 py-3 text-left transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'>
+											<span
+												aria-hidden
+												className='absolute inset-y-0 left-0 bg-primary/10 transition-all group-hover:bg-primary/20 rounded-md'
+												style={{
+													width: `${(profiles.length / maxCount) * 100}%`
+												}}
+											/>
+
+											<span className='relative z-10 flex min-w-0 items-center gap-3'>
+												<RegionIcon
+													code={code}
+													className='h-5 w-7 shrink-0 rounded-sm border border-border/50'
+												/>
+												<span className='flex min-w-0 flex-col gap-0.5'>
+													<span className='truncate text-sm font-medium'>
+														{getRegionName(code)}
+													</span>
+													<span className='text-xs text-muted-foreground'>
+														{formatPercentage(profiles.length, totalFollowers)}
+													</span>
+												</span>
+											</span>
+
+											<Badge
+												variant='secondary'
+												className='relative z-10 shrink-0 text-xs bg-background/50 backdrop-blur-sm'>
+												{profiles.length}
+											</Badge>
+										</button>
+									</div>
+								);
+							})}
+						</div>
+					:	<EmptyState text={`No countries match "${deferredSearch}"`} />
+				: filteredProfiles.length > 0 ?
+					<div
+						style={{
+							height: virtualizer.getTotalSize(),
+							position: "relative"
+						}}>
+						{virtualizer.getVirtualItems().map((virtualRow) => {
+							const profile = filteredProfiles[virtualRow.index];
+							return (
+								<div
+									key={profile.id}
+									style={{
+										position: "absolute",
+										top: 0,
+										left: 0,
+										width: "100%",
+										height: `${virtualRow.size}px`,
+										transform: `translateY(${virtualRow.start}px)`,
+										paddingBottom: "6px"
+									}}>
+									<a
+										href={profile.url}
+										target='_blank'
+										rel='noreferrer'
+										className='group flex h-full w-full items-center justify-between gap-3 rounded-lg border border-transparent bg-card/50 px-3 py-2 text-sm transition-all hover:bg-muted/60 hover:border-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'>
+										<span className='flex min-w-0 items-center gap-3'>
+											<Avatar className='h-8 w-8 border border-border'>
+												<AvatarImage src={profile.avatarUrl} alt={profile.login} />
+												<AvatarFallback className='text-xs'>
+													{(profile.name ?? profile.login)
+														.slice(0, 2)
+														.toUpperCase()}
+												</AvatarFallback>
+											</Avatar>
+											<span className='flex min-w-0 flex-col'>
+												<span className='truncate font-medium text-foreground'>
+													{profile.name ?? profile.login}
+												</span>
+												<span className='truncate font-mono text-xs text-muted-foreground'>
+													@{profile.login}
+												</span>
+											</span>
+										</span>
+										<ExternalLink className='h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100' />
+									</a>
+								</div>
+							);
+						})}
+					</div>
+				:	<EmptyState
+						text={`No ${label}s  ${country && !deferredSearch ? `in ${getRegionName(country)}` : `match ${deferredSearch}`}`}
+					/>
+				}
+			</div>
+		</div>
+	);
+}

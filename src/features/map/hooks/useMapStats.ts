@@ -1,0 +1,37 @@
+import { useMemo } from "react";
+import { getRegionName, UNKNOWN_REGION } from "@/shared/lib/region";
+import type { LocalizedProfile } from "@/shared/api/types";
+
+export type MapStats = {
+	coveragePct: number;
+	unlocatedPct: number;
+	topCountryName: string;
+	topCountryPct: number;
+};
+
+export function useMapStats(
+	audience: LocalizedProfile[],
+	profilesByCountry: Map<string, LocalizedProfile[]>
+): MapStats {
+	return useMemo(() => {
+		const total = audience.length;
+		const unknownCount = profilesByCountry.get(UNKNOWN_REGION)?.length ?? 0;
+		const locatedCount = total - unknownCount;
+
+		let topCountry: { code: string; count: number } | null = null;
+		for (const [code, profiles] of profilesByCountry) {
+			if (code === UNKNOWN_REGION) continue;
+			if (!topCountry || profiles.length > topCountry.count) {
+				topCountry = { code, count: profiles.length };
+			}
+		}
+
+		return {
+			coveragePct: total > 0 ? Math.round((locatedCount / total) * 100) : 0,
+			unlocatedPct: total > 0 ? Math.round((unknownCount / total) * 100) : 0,
+			topCountryName: topCountry ? getRegionName(topCountry.code) : "—",
+			topCountryPct:
+				topCountry && total > 0 ? Math.round((topCountry.count / total) * 100) : 0
+		};
+	}, [audience, profilesByCountry]);
+}
