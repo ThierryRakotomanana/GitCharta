@@ -2,9 +2,9 @@ import { Progress } from "@/shared/components/ui/progress";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { CheckCircle2, Loader2, CircleDashed } from "lucide-react";
-import type { Step } from "@/features/audience/model/audienceProgress";
+import type { ProgressStep } from "./progressStep";
 
-function StepIcon({ status }: { status: Step["status"] }) {
+function StepIcon({ status }: { status: ProgressStep["status"] }) {
 	if (status === "done") {
 		return <CheckCircle2 className='h-5 w-5 text-green-600' aria-hidden />;
 	}
@@ -14,7 +14,7 @@ function StepIcon({ status }: { status: Step["status"] }) {
 	return <CircleDashed className='h-5 w-5 text-muted-foreground' aria-hidden />;
 }
 
-function StepRow({ step }: { step: Step }) {
+function StepRow({ step }: { step: ProgressStep }) {
 	return (
 		<div className='flex items-start gap-3 py-2'>
 			<span className='w-5 h-5 flex items-center justify-center mt-0.5 shrink-0'>
@@ -42,7 +42,7 @@ export function LoadingView({
 	pct,
 	onCancel
 }: {
-	steps: Step[];
+	steps: ProgressStep[];
 	pct: number;
 	onCancel?: () => void;
 }) {
