@@ -29,6 +29,13 @@ function CountryFlagBase({
 	}
 
 	const Flag = FLAG_COMPONENTS[code];
+	if (!Flag) {
+		return (
+			<span className={className} role='img' aria-label={label}>
+				{code}
+			</span>
+		);
+	}
 	return <Flag className={className} role='img' aria-label={label} />;
 }
 
