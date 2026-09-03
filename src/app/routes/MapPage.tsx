@@ -18,12 +18,12 @@ import { AlertTriangle, Filter, List, Loader2, WifiOff } from "lucide-react";
 import { LoadingView } from "@/shared/components/LoadingView";
 import { ErrorView } from "@/shared/components/ErrorView";
 import { WorldMap, MapErrorBoundary } from "@/features/map";
+import { CountryList } from "@/features/leaderboard";
+import { useAudience } from "@/features/audience";
 import { useElementSize } from "@/shared/hooks/useElementSize";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
-import { useAudience } from "@/features/audience/hooks/useAudience";
-import { CountryList } from "@/features/leaderboard/components/CountryList";
-import { SearchOverlay } from "@/features/map/components/SearchOverlay";
 import { useSearchLogin } from "@/features/map/hooks/useSearchLogin";
+import { SearchOverlay } from "@/features/map/components/SearchOverlay";
 
 type AudienceViewTab = "followers" | "following" | "ghosts";
 
@@ -68,7 +68,7 @@ export function MapPage() {
 	const isMobile = useMediaQuery("(max-width: 767px)");
 
 	const hasSelection = country !== null;
-	const backgroundLocked = sheetOpen && !hasSelection;
+	const backgroundLocked = isMobile && sheetOpen && !hasSelection;
 
 	const { ref: mapContainerRef, size } = useElementSize<HTMLDivElement>();
 	const {
@@ -110,14 +110,13 @@ export function MapPage() {
 						<AlertTitle className='text-xs font-semibold'>
 							Reconnecting to server...
 						</AlertTitle>
-						<AlertDescription className='text-[11px] opacity-90'>
+						<AlertDescription className='text-2xs opacity-90'>
 							Background job is active. Retrying polling automatically.
 						</AlertDescription>
 					</Alert>
 				</div>
 			)}
 
-			{/* Search overlay: always present, floats above whichever state is active below. */}
 			<div className='absolute inset-0 z-30 flex items-start justify-center pt-6'>
 				<SearchOverlay
 					activeLogin={login}
@@ -127,8 +126,6 @@ export function MapPage() {
 				/>
 			</div>
 
-			{/* Status transitions cross-fade rather than hard-swap, so entering a
-			    search feels like one continuous motion instead of a page flash. */}
 			<div className='relative flex min-h-0 flex-1'>
 				{status === "loading" && (
 					<div className='absolute inset-0 z-20 flex flex-col bg-background/80 backdrop-blur-sm animate-in fade-in duration-300'>
@@ -148,9 +145,6 @@ export function MapPage() {
 					</div>
 				)}
 
-				{/* The map itself renders in both the idle (no search yet) and
-				    success states — only its content changes — so there's no
-				    remount/flash the moment a search resolves. */}
 				<div
 					className={`relative flex w-full min-h-0 flex-1 items-stretch overflow-hidden transition-opacity duration-500 ${
 						status === "loading" ? "opacity-40" : "opacity-100"
@@ -162,7 +156,7 @@ export function MapPage() {
 									<DropdownMenuTrigger asChild>
 										<Button
 											variant='secondary'
-											className='h-9 gap-2 rounded-full border border-border/40 bg-background/60 px-4 text-xs font-medium shadow-lg backdrop-blur-xl hover:bg-background/80'>
+											className='h-9 gap-2 rounded-full border border-border-edge bg-background/60 px-4 text-xs font-medium shadow-lg backdrop-blur-xl hover:bg-background/80'>
 											<Filter className='h-3.5 w-3.5' />
 											{AUDIENCE_TABS.find((t) => t.value === audienceType)?.label}
 										</Button>
@@ -191,8 +185,8 @@ export function MapPage() {
 								</DropdownMenu>
 
 								{partial && (
-									<div className='flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-[11px] text-blue-400 backdrop-blur-md'>
-										<AlertTriangle className='h-3 w-3' />
+									<div className='flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-2xs text-blue-400 backdrop-blur-md'>
+										<AlertTriangle className='h-3.5 w-3.5' />
 										<span>Partial dataset — backfilling remaining history</span>
 									</div>
 								)}
@@ -200,7 +194,7 @@ export function MapPage() {
 						)}
 
 						{size && size.width > 0 && size.height > 0 ?
-							<MapErrorBoundary onReset={() => setCountry(null)}>
+							<MapErrorBoundary key={login} onReset={() => setCountry(null)}>
 								<WorldMap
 									width={size.width}
 									height={size.height}
@@ -228,8 +222,8 @@ export function MapPage() {
 								<Button
 									variant='secondary'
 									onClick={() => setSheetOpen(true)}
-									className='flex h-36 w-8 flex-col items-center justify-center rounded-l-xl rounded-r-none border border-r-0 border-border/50 bg-card/90 p-0 shadow-2xl backdrop-blur-xl transition-all hover:w-10 hover:bg-card focus-visible:ring-2 focus-visible:ring-primary'>
-									<div className='-rotate-90 whitespace-nowrap text-[11px] font-bold uppercase tracking-widest text-muted-foreground'>
+									className='flex h-36 w-8 flex-col items-center justify-center rounded-l-xl rounded-r-none border border-r-0 border-border-edge bg-card/90 p-0 shadow-2xl backdrop-blur-xl transition-all hover:w-10 hover:bg-card focus-visible:ring-2 focus-visible:ring-primary'>
+									<div className='-rotate-90 whitespace-nowrap text-2xs font-bold uppercase tracking-widest text-muted-foreground'>
 										Leaderboard
 									</div>
 								</Button>
