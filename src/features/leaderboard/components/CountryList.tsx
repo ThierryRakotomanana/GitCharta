@@ -40,6 +40,16 @@ function pluralize(count: number, noun: string): string {
 	return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
+function emptyStateMessage(
+	label: string,
+	country: string | null,
+	search: string
+): string {
+	const scope = country ? ` in ${getRegionName(country)}` : "";
+	const match = search.trim() ? ` matching "${search.trim()}"` : "";
+	return `No ${label}s${scope}${match}`;
+}
+
 export function CountryList({
 	data,
 	country,
@@ -74,35 +84,21 @@ export function CountryList({
 		}, new Map<string, LocalizedProfile[]>());
 	}, [data]);
 
-	const sortedCountries: [string, LocalizedProfile[]][] = useMemo(() => {
-		const entries = Array.from(usersByCountry.entries()) as [
-			string,
-			LocalizedProfile[]
-		][];
-
-		return entries
+	const sortedCountries = useMemo(() => {
+		return Array.from(usersByCountry.entries())
 			.filter(([code]) => code !== UNKNOWN_REGION)
-			.sort(
-				(a: [string, LocalizedProfile[]], b: [string, LocalizedProfile[]]) =>
-					b[1].length - a[1].length
-			);
+			.sort((a, b) => b[1].length - a[1].length);
 	}, [usersByCountry]);
 
-	const maxCount: number = useMemo(
-		() =>
-			Math.max(
-				1,
-				...sortedCountries.map(
-					([, profiles]: [string, LocalizedProfile[]]) => profiles.length
-				)
-			),
+	const maxCount = useMemo(
+		() => Math.max(1, ...sortedCountries.map(([, profiles]) => profiles.length)),
 		[sortedCountries]
 	);
 
 	const unknownCount = usersByCountry.get(UNKNOWN_REGION)?.length ?? 0;
 	const locatedCount = totalFollowers - unknownCount;
 
-	const filteredCountries: [string, LocalizedProfile[]][] = useMemo(() => {
+	const filteredCountries = useMemo(() => {
 		if (!deferredSearch.trim()) return sortedCountries;
 		const q = deferredSearch.trim().toLowerCase();
 		return sortedCountries.filter(([code]) =>
@@ -142,7 +138,7 @@ export function CountryList({
 			<div className='flex items-center justify-between gap-2'>
 				{country ?
 					<div
-						className='flex w-full items-center gap-2.5 rounded-lg border border-border bg-muted/30 px-3 py-2'
+						className='flex w-full items-center gap-2.5 rounded-lg border border-border-edge bg-muted/30 px-3 py-2'
 						style={
 							isUnknownSelected ? undefined : (
 								{ background: `${getCountryColor(country)}20` }
@@ -151,18 +147,18 @@ export function CountryList({
 						{isUnknownSelected ?
 							<RegionIcon
 								code={country}
-								className='h-5 w-7 shrink-0 rounded-sm border border-border/40'
+								className='h-5 w-7 shrink-0 rounded-sm border border-border-hairline'
 							/>
 						:	<CountryFlag
 								isoCode={country}
-								className='h-5 w-7 shrink-0 rounded-sm border border-border/40'
+								className='h-5 w-7 shrink-0 rounded-sm border border-border-hairline'
 							/>
 						}
 						<div className='min-w-0 flex items-center gap-2'>
 							<button
 								type='button'
 								onClick={() => setCountry(null)}
-								className='inline-flex min-w-0 items-center gap-2 rounded-full border border-border bg-muted/40 py-1 pl-2 pr-1 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'>
+								className='inline-flex min-w-0 items-center gap-2 rounded-full border border-border-edge bg-muted/40 py-1 pl-2 pr-1 text-sm font-medium text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'>
 								<span className='truncate'>{getRegionName(country)}</span>
 								<span className='flex h-4 w-4 items-center justify-center rounded-full text-muted-foreground hover:text-foreground'>
 									<X size={12} />
@@ -190,11 +186,11 @@ export function CountryList({
 							<button
 								type='button'
 								onClick={() => setCountry(UNKNOWN_REGION)}
-								className='group flex w-full items-center justify-between rounded-lg border border-dashed border-border/50 bg-muted/20 px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40 hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'>
+								className='group flex w-full items-center justify-between rounded-lg border border-dashed border-border-edge bg-muted/20 px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40 hover:border-border-edge focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'>
 								<span className='flex min-w-0 items-center gap-3'>
 									<RegionIcon
 										code={UNKNOWN_REGION}
-										className='h-4 w-6 shrink-0 rounded-sm border border-border/40 opacity-70'
+										className='h-4 w-6 shrink-0 rounded-sm border border-border-hairline opacity-70'
 									/>
 									<span className='flex min-w-0 flex-col'>
 										<span className='truncate font-medium text-muted-foreground'>
@@ -269,7 +265,7 @@ export function CountryList({
 											<span className='relative z-10 flex min-w-0 items-center gap-3'>
 												<RegionIcon
 													code={code}
-													className='h-5 w-7 shrink-0 rounded-sm border border-border/50'
+													className='h-5 w-7 shrink-0 rounded-sm border border-border-hairline'
 												/>
 												<span className='flex min-w-0 flex-col gap-0.5'>
 													<span className='truncate text-sm font-medium'>
@@ -316,7 +312,7 @@ export function CountryList({
 										href={profile.url}
 										target='_blank'
 										rel='noreferrer'
-										className='group flex h-full w-full items-center justify-between gap-3 rounded-lg border border-transparent bg-card/50 px-3 py-2 text-sm transition-all hover:bg-muted/60 hover:border-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'>
+										className='group flex h-full w-full items-center justify-between gap-3 rounded-lg border border-transparent bg-card/50 px-3 py-2 text-sm transition-all hover:bg-muted/60 hover:border-border-edge focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'>
 										<span className='flex min-w-0 items-center gap-3'>
 											<Avatar className='h-8 w-8 border border-border'>
 												<AvatarImage src={profile.avatarUrl} alt={profile.login} />
@@ -341,10 +337,7 @@ export function CountryList({
 							);
 						})}
 					</div>
-				:	<EmptyState
-						text={`No ${label}s  ${country && !deferredSearch ? `in ${getRegionName(country)}` : `match ${deferredSearch}`}`}
-					/>
-				}
+				:	<EmptyState text={emptyStateMessage(label, country, deferredSearch)} />}
 			</div>
 		</div>
 	);
