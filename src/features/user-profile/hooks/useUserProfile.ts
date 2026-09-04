@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createResourceCache } from "@/shared/lib/createResourceCache";
 import { fetchUserProfile } from "@/features/user-profile/api/fetchUserProfile";
-import type { UserProfileResponse } from "@/features/user-profile/model/type";
+import type { UserProfileResponse } from "@/features/user-profile";
 
 export const profileCache = createResourceCache<UserProfileResponse>();
 
