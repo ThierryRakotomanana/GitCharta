@@ -6,7 +6,7 @@ import {
 	Ghost,
 	GitFork,
 	GitPullRequest,
-	Lock,
+	Globe2,
 	Mail,
 	Percent,
 	Star,
@@ -41,7 +41,7 @@ const EXAMPLE_PROFILE = {
 const STEPS = [
 	{
 		title: "Connect",
-		body: "Enter your GitHub username and a personal access token.",
+		body: "Enter any public GitHub username — no sign-in required.",
 		visual: ConnectVisual
 	},
 	{
@@ -155,23 +155,21 @@ function ConnectVisual() {
 			className='rounded-lg border border-border bg-muted/30 p-3 space-y-2'
 			aria-hidden='true'>
 			<div className='flex items-center gap-2'>
-				<span className='w-12 shrink-0 text-[9px] font-mono text-muted-foreground'>
-					user
+				<span className='w-12 shrink-0 text-3xs font-mono text-muted-foreground'>
+					login
 				</span>
-				<span className='flex-1 h-5 rounded border border-border bg-background px-2 flex items-center text-[10px] font-mono truncate'>
+				<span className='flex-1 h-5 rounded border border-border bg-background px-2 flex items-center text-2xs font-mono truncate'>
 					torvalds
 				</span>
 			</div>
 			<div className='flex items-center gap-2'>
-				<span className='w-12 shrink-0 text-[9px] font-mono text-muted-foreground'>
-					token
+				<span className='w-12 shrink-0 text-3xs font-mono text-muted-foreground'>
+					access
 				</span>
-				<span className='flex-1 h-5 rounded border border-border bg-background px-2 flex items-center gap-0.5'>
-					{Array.from({ length: 8 }).map((_, i) => (
-						<span key={i} className='w-1 h-1 rounded-full bg-muted-foreground/60' />
-					))}
+				<span className='flex-1 h-5 rounded border border-border bg-background px-2 flex items-center text-2xs font-mono text-muted-foreground truncate'>
+					public, no sign-in
 				</span>
-				<Lock className='h-3 w-3 text-muted-foreground shrink-0' />
+				<Globe2 className='h-3.5 w-3.5 text-muted-foreground shrink-0' />
 			</div>
 		</div>
 	);
@@ -185,7 +183,7 @@ function FetchVisual() {
 	];
 	return (
 		<div
-			className='rounded-lg border border-border bg-muted/30 p-3 font-mono text-[10px] leading-relaxed'
+			className='rounded-lg border border-border bg-muted/30 p-3 font-mono text-2xs leading-relaxed'
 			aria-hidden='true'>
 			{lines.map((line, i) => (
 				<p
@@ -240,7 +238,7 @@ function ExploreVisual() {
 					<circle key={i} cx={d.x} cy={d.y} r={2} fill='hsl(var(--signal))' />
 				))}
 			</svg>
-			<p className='mt-1 text-[9px] font-mono text-muted-foreground text-center'>
+			<p className='mt-1 text-3xs font-mono text-muted-foreground text-center'>
 				34 countries reached
 			</p>
 		</div>
@@ -406,7 +404,7 @@ export default function LandingPage({ onSubmit }: { onSubmit: () => void }) {
 								all represent someone your work reached too.
 							</p>
 						</div>
-						<span className='hidden sm:inline shrink-0 font-mono text-[11px] text-muted-foreground'>
+						<span className='hidden sm:inline shrink-0 font-mono text-2xs text-muted-foreground'>
 							on the map, not yet shipped
 						</span>
 					</div>
@@ -417,7 +415,7 @@ export default function LandingPage({ onSubmit }: { onSubmit: () => void }) {
 								className='rounded-lg border border-dashed border-border p-5'>
 								<div className='flex items-center justify-between'>
 									<Icon className='h-5 w-5 text-muted-foreground' />
-									<span className='rounded-full border border-dashed border-border px-2 py-0.5 text-[10px] font-mono text-muted-foreground'>
+									<span className='rounded-full border border-dashed border-border px-2 py-0.5 text-3xs font-mono text-muted-foreground'>
 										planned
 									</span>
 								</div>
