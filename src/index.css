@@ -17,6 +17,7 @@
 	--color-secondary-foreground: var(--secondary-foreground);
 	--color-muted: var(--muted);
 	--color-muted-foreground: var(--muted-foreground);
+	--color-subtle-foreground: var(--subtle-foreground);
 	--color-accent: var(--accent);
 	--color-accent-foreground: var(--accent-foreground);
 	--color-destructive: var(--destructive);
@@ -26,6 +27,8 @@
 	--color-warning: var(--warning);
 	--color-warning-foreground: var(--warning-foreground);
 	--color-border: var(--border);
+	--color-border-hairline: var(--border-hairline);
+	--color-border-edge: var(--border-edge);
 	--color-input: var(--input);
 	--color-ring: var(--ring);
 
@@ -63,6 +66,12 @@
 	--radius-4xl: calc(var(--radius) * 2.6);
 	--signal: 142 71% 45%;
 	--signal-warm: 36 100% 66%;
+
+	--text-3xs: 0.625rem;
+	--text-3xs--line-height: 0.875rem;
+	--text-2xs: 0.6875rem;
+	--text-2xs--line-height: 1rem;
+	--radius-floating: var(--radius-xl);
 }
 
 :root {
@@ -116,6 +125,10 @@
 	--map-water: transparent;
 	--map-land: oklch(0.2 0.01 250);
 	--signal: 190 90% 60%;
+
+	--border-hairline: color-mix(in oklch, var(--border) 40%, transparent);
+	--border-edge: color-mix(in oklch, var(--border) 60%, transparent);
+	--subtle-foreground: oklch(0.52 0.016 256);
 }
 
 @layer base {
