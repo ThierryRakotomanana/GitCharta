@@ -61,11 +61,27 @@ export function useGlobeRotation(
 		onDrag: handleDrag
 	});
 
+	const nudgePan = useCallback(
+		(anchorX: number, anchorY: number, scaleRatio: number, atZoom: number) => {
+			if (isGlobe) return;
+			const maxX = Math.max(0, (width * atZoom - width) / 2);
+			const maxY = Math.max(0, (height * atZoom - height) / 2);
+			const k = 1 - scaleRatio;
+
+			setPan(([p0, p1]) => [
+				Math.max(-maxX, Math.min(maxX, p0 + k * (anchorX - p0))),
+				Math.max(-maxY, Math.min(maxY, p1 + k * (anchorY - p1)))
+			]);
+		},
+		[isGlobe, width, height]
+	);
+
 	return {
 		rotation,
 		pan: effectivePan,
 		isDragging,
 		didDrag,
-		dragHandlers: gestureHandlers
+		dragHandlers: gestureHandlers,
+		nudgePan
 	};
 }
