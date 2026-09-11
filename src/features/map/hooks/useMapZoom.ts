@@ -31,16 +31,17 @@ export function useMapZoom(
 				e.clientY - rect.top
 			];
 
-			setZoom((prev) => {
-				const next = Math.min(
-					MAX_ZOOM,
-					Math.max(MIN_ZOOM, Number((prev + delta).toFixed(2)))
-				);
-				if (next !== prev) onZoomAt?.(prev, next, anchor);
-				return next;
-			});
+			const next = Math.min(
+				MAX_ZOOM,
+				Math.max(MIN_ZOOM, Number((zoom + delta).toFixed(2)))
+			);
+
+			if (next === zoom) return;
+			const prev = zoom;
+			setZoom(next);
+			onZoomAt?.(prev, next, anchor);
 		},
-		[onZoomAt]
+		[zoom, onZoomAt]
 	);
 
 	return {

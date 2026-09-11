@@ -117,13 +117,15 @@ export function MapPage() {
 				</div>
 			)}
 
-			<div className='absolute inset-0 z-30 flex items-start justify-center pt-6'>
-				<SearchOverlay
-					activeLogin={login}
-					isSearching={status === "loading"}
-					onSearch={search}
-					onClear={handleClearSearch}
-				/>
+			<div className='pointer-events-none absolute inset-0 z-30 flex items-start justify-center pt-6'>
+				<div className='pointer-events-auto'>
+					<SearchOverlay
+						activeLogin={login}
+						isSearching={status === "loading"}
+						onSearch={search}
+						onClear={handleClearSearch}
+					/>
+				</div>
 			</div>
 
 			<div className='relative flex min-h-0 flex-1'>

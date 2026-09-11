@@ -6,7 +6,8 @@ const LOGIN_PARAM = "login";
 
 export function useSearchLogin() {
 	const [searchParams, setSearchParams] = useSearchParams();
-	const login = searchParams.get(LOGIN_PARAM) ?? "";
+	const rawLogin = searchParams.get(LOGIN_PARAM) ?? "";
+	const login = isValidLogin(rawLogin) ? rawLogin : "";
 
 	const search = useCallback(
 		(value: string) => {
@@ -38,7 +39,6 @@ export function useSearchLogin() {
 	return {
 		login,
 		hasSearch: login.length > 0,
-		isValid: login.length > 0 && isValidLogin(login),
 		search,
 		clear
 	};
