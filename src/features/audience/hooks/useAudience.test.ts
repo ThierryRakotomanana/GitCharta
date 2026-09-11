@@ -14,7 +14,7 @@ import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import type { ProfileNode } from "@/shared/api/types";
 import type { AudienceJob } from "@/features/audience/model/types";
-import type { UserProfileResponse } from "@/features/user-profile/model/type";
+import type { UserProfileResponse } from "@/features/user-profile";
 import { geocode, type GeocodeResult } from "@/shared/lib/geocode";
 
 const BASE = "http://localhost:8080";
