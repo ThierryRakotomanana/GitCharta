@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { githubAudienceService } from "../api/audienceService";
 import { isValidLogin } from "../model/validateLogin";
@@ -49,6 +49,10 @@ export function useAudienceJob(
 	const queryClient = useQueryClient();
 	const jobIdRef = useRef<string | null>(null);
 	const restartCountRef = useRef(0);
+	const [cancelledKey, setCancelledKey] = useState<string | null>(null);
+
+	const activeKeyStr = `${login}:${type}`;
+	const isCancelled = cancelledKey === activeKeyStr;
 
 	const query = useQuery({
 		queryKey: queryKey(login, type),
@@ -101,7 +105,7 @@ export function useAudienceJob(
 				throw err;
 			}
 		},
-		enabled: enabled && !!login,
+		enabled: enabled && !!login && !isCancelled,
 		refetchInterval: (q) => {
 			const status = q.state.data?.status;
 			if (!status || isTerminalStatus(status)) return false;
@@ -117,7 +121,7 @@ export function useAudienceJob(
 	});
 
 	const phase: JobPhase =
-		!enabled || !login ? "idle"
+		!enabled || !login || isCancelled ? "idle"
 		: query.isError ? "error"
 		: !query.data && query.isPending ? "creating"
 		: (query.data?.status ?? "idle");
@@ -127,18 +131,21 @@ export function useAudienceJob(
 
 	const state: AudienceJobState = {
 		phase,
-		job: query.data ?? null,
+		job: isCancelled ? null : (query.data ?? null),
 		connectionIssue:
-			query.isPaused
-			|| (query.isFetching && query.failureCount >= FAILURE_STREAK_FOR_WARNING),
+			!isCancelled
+			&& (query.isPaused
+				|| (query.isFetching && query.failureCount >= FAILURE_STREAK_FOR_WARNING)),
 		error:
-			createFailure ? createFailure.message
+			isCancelled ? null
+			: createFailure ? createFailure.message
 			: query.data?.status === "failed" ? query.data.error || "Job failed"
 			: null,
-		resetAt: createFailure?.resetAt ?? null
+		resetAt: isCancelled ? null : (createFailure?.resetAt ?? null)
 	};
 
 	const cancel = useCallback(async () => {
+		setCancelledKey(activeKeyStr);
 		const jobId = jobIdRef.current;
 		jobStorage.clear(login, type);
 		jobIdRef.current = null;
@@ -159,10 +166,11 @@ export function useAudienceJob(
 		}
 
 		await queryClient.cancelQueries({ queryKey: queryKey(login, type) });
-		queryClient.setQueryData(queryKey(login, type), undefined);
-	}, [login, type, queryClient]);
+		queryClient.removeQueries({ queryKey: queryKey(login, type) });
+	}, [login, type, queryClient, activeKeyStr]);
 
 	const restart = useCallback(() => {
+		setCancelledKey(null);
 		jobStorage.clear(login, type);
 		jobIdRef.current = null;
 		restartCountRef.current = 0;
