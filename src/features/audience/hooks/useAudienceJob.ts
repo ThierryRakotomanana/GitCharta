@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { githubAudienceService } from "../api/audienceService";
 import { isValidLogin } from "../model/validateLogin";
@@ -10,6 +10,7 @@ import { ApiError } from "@/shared/api/apiError";
 const POLL_INTERVAL_MS = 2000;
 const MAX_BACKOFF_MS = 30_000;
 const FAILURE_STREAK_FOR_WARNING = 3;
+const MAX_QUERY_RETRIES = 5;
 
 export type JobPhase = "idle" | "creating" | AudienceJob["status"] | "error";
 
@@ -41,18 +42,42 @@ function messageForCreateFailure(err: unknown): {
 	return { message: "Failed to start the fetch.", resetAt: null };
 }
 
+function shouldRetryQuery(failureCount: number, err: unknown): boolean {
+	return (
+		failureCount < MAX_QUERY_RETRIES
+		&& err instanceof ApiError
+		&& ((err.status === 0 && !err.isAborted) || err.isRateLimited)
+	);
+}
+
+type KeyedJobRefs = {
+	key: string;
+	jobIdRef: { current: string | null };
+	restartCountRef: { current: number };
+};
+
+function createKeyedJobRefs(key: string): KeyedJobRefs {
+	return {
+		key,
+		jobIdRef: { current: null },
+		restartCountRef: { current: 0 }
+	};
+}
+
 export function useAudienceJob(
 	login: string,
 	type: AudienceType,
 	enabled: boolean
 ) {
 	const queryClient = useQueryClient();
-	const jobIdRef = useRef<string | null>(null);
-	const restartCountRef = useRef(0);
 	const [cancelledKey, setCancelledKey] = useState<string | null>(null);
 
 	const activeKeyStr = `${login}:${type}`;
 	const isCancelled = cancelledKey === activeKeyStr;
+	const { jobIdRef, restartCountRef } = useMemo(
+		() => createKeyedJobRefs(activeKeyStr),
+		[activeKeyStr]
+	);
 
 	const query = useQuery({
 		queryKey: queryKey(login, type),
@@ -115,7 +140,7 @@ export function useAudienceJob(
 			const status = q.state.data?.status;
 			return status && isTerminalStatus(status) ? Infinity : 0;
 		},
-		retry: 5,
+		retry: shouldRetryQuery,
 		retryDelay: (attemptIndex) =>
 			Math.min(POLL_INTERVAL_MS * 2 ** attemptIndex, MAX_BACKOFF_MS)
 	});
