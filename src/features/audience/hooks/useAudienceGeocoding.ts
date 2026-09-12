@@ -71,9 +71,17 @@ export function useAudienceGeocoding(
 		: query.isSuccess ? "done"
 		: "running";
 
+	const currentProgress =
+		status === "done" && query.data ?
+			{
+				done: query.data.followers.length + query.data.ghosts.length,
+				total: query.data.followers.length + query.data.ghosts.length
+			}
+		:	progress;
+
 	return {
 		audience: query.data ?? null,
 		status,
-		progress
+		progress: currentProgress
 	};
 }
