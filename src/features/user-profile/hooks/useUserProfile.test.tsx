@@ -12,11 +12,10 @@ import {
 } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse, delay } from "msw";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { requestQueue } from "@/shared/api/requestQueue";
-import {
-	useUserProfile,
-	profileCache
-} from "@/features/user-profile/hooks/useUserProfile";
+import { useUserProfile } from "@/features/user-profile/hooks/useUserProfile";
 
 const server = setupServer();
 
@@ -24,7 +23,6 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 
 beforeEach(() => {
 	requestQueue.reset();
-	profileCache.clear();
 });
 
 afterEach(() => {
@@ -34,9 +32,20 @@ afterEach(() => {
 
 afterAll(() => server.close());
 
+function createWrapper() {
+	const queryClient = new QueryClient({
+		defaultOptions: { queries: { retry: false } }
+	});
+	return ({ children }: { children: ReactNode }) => (
+		<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+	);
+}
+
 describe("useUserProfile Hook", () => {
 	it("should return null immediately without making network calls when login is empty", () => {
-		const { result } = renderHook(() => useUserProfile(""));
+		const { result } = renderHook(() => useUserProfile(""), {
+			wrapper: createWrapper()
+		});
 		expect(result.current).toBeNull();
 	});
 
@@ -57,7 +66,9 @@ describe("useUserProfile Hook", () => {
 			})
 		);
 
-		const { result } = renderHook(() => useUserProfile("ThierryRakotomanana"));
+		const { result } = renderHook(() => useUserProfile("ThierryRakotomanana"), {
+			wrapper: createWrapper()
+		});
 
 		await waitFor(() => {
 			expect(result.current).toEqual({
@@ -78,7 +89,9 @@ describe("useUserProfile Hook", () => {
 			})
 		);
 
-		const { result } = renderHook(() => useUserProfile("non-existent-user"));
+		const { result } = renderHook(() => useUserProfile("non-existent-user"), {
+			wrapper: createWrapper()
+		});
 
 		await waitFor(() => {
 			expect(result.current).toBeNull();
@@ -95,7 +108,9 @@ describe("useUserProfile Hook", () => {
 
 		const fetchSpy = vi.spyOn(globalThis, "fetch");
 
-		const { unmount } = renderHook(() => useUserProfile("ThierryRakotomanana"));
+		const { unmount } = renderHook(() => useUserProfile("ThierryRakotomanana"), {
+			wrapper: createWrapper()
+		});
 
 		await waitFor(() => {
 			expect(fetchSpy).toHaveBeenCalled();
@@ -109,6 +124,8 @@ describe("useUserProfile Hook", () => {
 
 		unmount();
 
-		expect(activeSignal?.aborted).toBe(true);
+		await waitFor(() => {
+			expect(activeSignal?.aborted).toBe(true);
+		});
 	});
 });
