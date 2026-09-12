@@ -1,3 +1,62 @@
+## 1.0.0
+
+### Major Changes
+
+- feat: will add stargazers, forks and prs section [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#39](https://github.com/ThierryRakotomanana/GitCharta/pull/39)]
+  After it's first exposure, we received many feedback from differents person, everyone asked a map for `Stargazers` and we think it could be extend to `Forks` and why not `PRs` also
+
+- Migrate legacy direct API calls to a structured, resilient polling and orchestration hook architecture with comprehensive unit and MSW integration test suites. [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#65](https://github.com/ThierryRakotomanana/GitCharta/pull/65)]
+  
+  **What Changed**
+  
+  - **Primitive Job Polling (`useAudienceJob`):**
+  - Implemented robust lifecycle management with state persistence via `jobStorage`, handling job creation, active polling, terminal state cleanup, and cancellation.
+  - Added critical safety guarantees including exponential backoff with connection warning states on consecutive failures, safe 404 expiration resets, and 500 error bailouts to prevent infinite restart loops.
+  - Ensured complete resource cleanup and timer cancellation on component unmount.
+  
+  - **High-Level Orchestration (`useAudience` & `useAudienceGeocoding`):**
+  - Coordinated parallel execution of follower and following retrieval pipelines.
+  - Integrated efficient non-blocking region geocoding managed via clean `useState` state machines and `AbortController` signals.
+  - Automated metric generation including follow-back analysis and ghost follower identification.
+  
+  - **Testing Infrastructure & Type Safety:**
+  - **Unit Tests:** Hardened primitive hook tests utilizing Vitest fake timers to verify backoff, unmount behavior, and error boundaries.
+  - **Integration Tests:** Implemented MSW-backed integration suites for the main orchestrator to verify end-to-end network coordination, success states, and error short-circuiting.
+
+- Refactor project architecture from a flat folder structure to a feature-based structure. This is a structural change that moves source files into feature-specific directories. While there are no functional changes to the codebase logic, all internal file paths and import paths have changed. [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#68](https://github.com/ThierryRakotomanana/GitCharta/pull/68)]
+
+### Minor Changes
+
+- feat(map): unify control dock and resolve mobile layout collisions [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#60](https://github.com/ThierryRakotomanana/GitCharta/pull/60)]
+
+- refactor(useGlobeRotation): split it into three distinctive separation of concern, and avoid re-inventing features already provide by d3 [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#58](https://github.com/ThierryRakotomanana/GitCharta/pull/58)]
+
+- refactor: replace custom caching system with tanstack query in hooks [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#72](https://github.com/ThierryRakotomanana/GitCharta/pull/72)]
+
+- feat(worldmap): add globe rotation and interactive dragging logic [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#47](https://github.com/ThierryRakotomanana/GitCharta/pull/47)]
+  Add interactive drag rotation and auto-centering to the 3D globe, powered by a new `useGlobeRotation` custom hook.
+
+- feat: add smooth transition between the two projection(2D and 3D) [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#47](https://github.com/ThierryRakotomanana/GitCharta/pull/47)]
+
+- refactor: replace custom canvas snapshot with html-to-image library [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#46](https://github.com/ThierryRakotomanana/GitCharta/pull/46)]
+
+- feat(zoom): Introduce 2D Map Zooming, Panning, and Interaction Refactoring [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#49](https://github.com/ThierryRakotomanana/GitCharta/pull/49)]
+
+- feat: keep the map interactive while the country list is diplayed [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#62](https://github.com/ThierryRakotomanana/GitCharta/pull/62)]
+
+- refactor: extract the path generator into a custom hooks [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#44](https://github.com/ThierryRakotomanana/GitCharta/pull/44)]
+
+- refactor(map): move audience selection menu to bottom-left overlay dock [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#63](https://github.com/ThierryRakotomanana/GitCharta/pull/63)]
+
+### Patch Changes
+
+- fix(transition): add smooth transition on the control dock when zoom is activated [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#61](https://github.com/ThierryRakotomanana/GitCharta/pull/61)]
+
+- fix: decouple position from visibility & capture on drag, not on down [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#48](https://github.com/ThierryRakotomanana/GitCharta/pull/48)]
+
+- fix: the issue where dragging or rotating the map accidentally toggled country selection upon pointer release, and resolves broken country click interactions caused by eager DOM pointer capture. [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#57](https://github.com/ThierryRakotomanana/GitCharta/pull/57)]
+
+- fix: handle recovered login none [made by [@ThierryRakotomanana](https://github.com/ThierryRakotomanana) full details in [#66](https://github.com/ThierryRakotomanana/GitCharta/pull/66)]
 ## 0.2.0
 
 ### Minor Changes
