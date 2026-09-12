@@ -8,6 +8,7 @@ import {
 import {
 	Sheet,
 	SheetContent,
+	SheetDescription,
 	SheetHeader,
 	SheetTitle,
 	SheetTrigger
@@ -252,6 +253,10 @@ export function MapPage() {
 										<SheetTitle className='text-xs font-bold uppercase tracking-widest text-primary'>
 											Global Distribution
 										</SheetTitle>
+										<SheetDescription className='sr-only'>
+											Breakdown of {currentNoun}s by country. Select a country on
+											the map or in this list to filter.
+										</SheetDescription>
 									</SheetHeader>
 									<div className='flex-1 overflow-hidden p-6 pt-4'>
 										<CountryList
