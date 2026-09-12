@@ -2,7 +2,6 @@ import type { ProfileNode } from "@/shared/api/types";
 import { CN } from "../constants/countries";
 import { CDICT } from "../constants/lookupTables";
 import { SKIP } from "../constants/unlocated";
-import { delay } from "@/features/audience/hooks/useAudienceJob";
 
 export type GeocodeResult = {
 	usersByCountry: Map<string, ProfileNode[]>;
@@ -126,7 +125,6 @@ export async function geocode(
 
 		if ((i + 1) % YIELD_BATCH_SIZE === 0) {
 			if (signal?.aborted) return;
-			await delay(0);
 			if (signal?.aborted) return;
 		}
 	}

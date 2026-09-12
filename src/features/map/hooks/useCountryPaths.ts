@@ -52,6 +52,7 @@ export function useCountryPaths(
 	sphere2D: string;
 	sphere3D: string;
 	progress: number;
+	sizeIsValid: boolean;
 } {
 	const [progress, setProgress] = useState(mode === "GLOBE" ? 1 : 0);
 	const progressRef = useRef(progress);
@@ -87,7 +88,10 @@ export function useCountryPaths(
 		};
 	}, [mode]);
 
+	const sizeIsValid = width > 0 && height > 0;
+
 	const p2d = useMemo(() => {
+		if (!sizeIsValid) return null;
 		const proj = geoNaturalEarth1().fitSize([width, height], { type: "Sphere" });
 		const baseScale = proj.scale();
 		const baseTranslate = proj.translate();
@@ -97,25 +101,28 @@ export function useCountryPaths(
 		proj.translate([baseTranslate[0] + pan[0], baseTranslate[1] + pan[1]]);
 
 		return proj;
-	}, [width, height, zoom, pan]);
+	}, [sizeIsValid, width, height, zoom, pan]);
 
 	const p3d = useMemo(() => {
+		if (!sizeIsValid) return null;
 		const proj = geoOrthographic()
 			.fitSize([width, height], { type: "Sphere" })
 			.rotate(rotation)
 			.clipAngle(90);
 		return proj.scale(proj.scale() * zoom);
-	}, [width, height, rotation, zoom]);
+	}, [sizeIsValid, width, height, rotation, zoom]);
 
 	const p3dRaw = useMemo(() => {
+		if (!sizeIsValid) return null;
 		const proj = geoOrthographic()
 			.fitSize([width, height], { type: "Sphere" })
 			.rotate(rotation)
 			.clipAngle(null);
 		return proj.scale(proj.scale() * zoom);
-	}, [width, height, rotation, zoom]);
+	}, [sizeIsValid, width, height, rotation, zoom]);
 
 	const activePathGenerator = useMemo(() => {
+		if (!sizeIsValid || !p2d || !p3d || !p3dRaw) return null;
 		if (progress === 0) return geoPath().projection(p2d);
 		if (progress === 1) return geoPath().projection(p3d);
 
@@ -134,7 +141,7 @@ export function useCountryPaths(
 		});
 
 		return geoPath().projection(interpolatingProjection);
-	}, [p2d, p3d, p3dRaw, progress]);
+	}, [sizeIsValid, p2d, p3d, p3dRaw, progress]);
 
 	const centroids = useMemo(() => {
 		const map = new Map<string, [number, number]>();
@@ -148,7 +155,7 @@ export function useCountryPaths(
 	const visibilityBlend = smoothstep(0.55, 0.9, progress);
 
 	const mapPaths = useMemo(() => {
-		if (!geoJson) return [];
+		if (!geoJson || !activePathGenerator) return [];
 		const rad = Math.PI / 180;
 
 		return geoJson.features.map((feature) => {
@@ -173,14 +180,14 @@ export function useCountryPaths(
 	}, [geoJson, activePathGenerator, centroids, rotate, visibilityBlend, progress]);
 
 	const sphere2D = useMemo(
-		() => (geoPath().projection(p2d)({ type: "Sphere" }) as string) || "",
+		() => (p2d && (geoPath().projection(p2d)({ type: "Sphere" }) as string)) || "",
 		[p2d]
 	);
 
 	const sphere3D = useMemo(
-		() => (geoPath().projection(p3d)({ type: "Sphere" }) as string) || "",
+		() => (p3d && (geoPath().projection(p3d)({ type: "Sphere" }) as string)) || "",
 		[p3d]
 	);
 
-	return { mapPaths, sphere2D, sphere3D, progress };
+	return { mapPaths, sphere2D, sphere3D, progress, sizeIsValid };
 }

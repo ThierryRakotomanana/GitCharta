@@ -1,5 +1,5 @@
-import type { LocalizedProfile } from "@/shared/api/types";
 import { useMemo } from "react";
+import type { LocalizedProfile } from "@/shared/api/types";
 
 export function useProfilesByCountry(
 	audience: LocalizedProfile[]

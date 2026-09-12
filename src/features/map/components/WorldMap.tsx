@@ -146,7 +146,7 @@ export const WorldMap = ({
 				<p>Couldn't load the world map.</p>
 				<button
 					type='button'
-					onClick={setReloadKey}
+					onClick={() => setReloadKey()}
 					className='rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'>
 					Retry
 				</button>
