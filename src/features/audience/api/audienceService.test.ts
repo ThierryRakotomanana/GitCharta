@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import { createAudienceJob, getAudienceJob, cancelAudienceJob } from "./endpoints";
-import { isValidLogin } from "@/features/audience/model/validateLogin";
+import { isValidLogin } from "@/shared/lib/login";
 
 const server = setupServer();
 
