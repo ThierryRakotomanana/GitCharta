@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { isValidLogin } from "@/features/audience";
+import { isValidLogin } from "@/shared/lib/login";
 
 const LOGIN_PARAM = "login";
 

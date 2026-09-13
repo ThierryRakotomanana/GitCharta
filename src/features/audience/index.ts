@@ -7,4 +7,4 @@ export type {
 	JobStatus,
 	JobProgress
 } from "./model/types";
-export { isValidLogin } from "./model/validateLogin";
+export type { ProgressStep, Step } from "./model/audienceProgress";

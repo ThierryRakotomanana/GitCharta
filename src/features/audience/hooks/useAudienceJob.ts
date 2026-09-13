@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { githubAudienceService } from "../api/audienceService";
-import { isValidLogin } from "../model/validateLogin";
+import { isValidLogin } from "@/shared/lib/login";
 import { jobStorage } from "../api/jobStorage";
 import type { AudienceJob, AudienceType } from "../model/types";
 import { isTerminalStatus } from "../model/types";

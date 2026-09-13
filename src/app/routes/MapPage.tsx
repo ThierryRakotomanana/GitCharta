@@ -16,15 +16,14 @@ import {
 import { Alert, AlertTitle, AlertDescription } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
 import { AlertTriangle, Filter, List, Loader2, WifiOff } from "lucide-react";
-import { LoadingView } from "@/shared/components/LoadingView";
-import { ErrorView } from "@/shared/components/ErrorView";
-import { WorldMap, MapErrorBoundary } from "@/features/map";
+import { LoadingView } from "@/app/components/LoadingView";
+import { ErrorView } from "@/app/components/ErrorView";
+import { WorldMap, MapErrorBoundary, SearchOverlay } from "@/features/map";
 import { CountryList } from "@/features/leaderboard";
 import { useAudience } from "@/features/audience";
 import { useElementSize } from "@/shared/hooks/useElementSize";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
-import { useSearchLogin } from "@/features/map/hooks/useSearchLogin";
-import { SearchOverlay } from "@/features/map/components/SearchOverlay";
+import { useSearchLogin } from "@/shared/hooks/useSearchLogin";
 
 type AudienceViewTab = "followers" | "following" | "ghosts";
 
