@@ -25,6 +25,7 @@ export function useAudienceGeocoding(
 
 	const enabled = !!followersResult && !!followingResult;
 
+	// eslint-disable-next-line @tanstack/query/exhaustive-deps
 	const query = useQuery({
 		queryKey: ["audience-geocode", String(resetKey)],
 		queryFn: async ({ signal }): Promise<AudienceData> => {

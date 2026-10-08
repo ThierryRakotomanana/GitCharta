@@ -79,6 +79,7 @@ export function useAudienceJob(
 		[activeKeyStr]
 	);
 
+	// eslint-disable-next-line @tanstack/query/exhaustive-deps
 	const query = useQuery({
 		queryKey: queryKey(login, type),
 		queryFn: async ({ signal }): Promise<AudienceJob> => {
