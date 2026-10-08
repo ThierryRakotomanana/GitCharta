@@ -146,6 +146,8 @@ export function useAudienceJob(
 			Math.min(POLL_INTERVAL_MS * 2 ** attemptIndex, MAX_BACKOFF_MS)
 	});
 
+	const { refetch } = query;
+
 	const phase: JobPhase =
 		!enabled || !login || isCancelled ? "idle"
 		: query.isError ? "error"
@@ -193,7 +195,7 @@ export function useAudienceJob(
 
 		await queryClient.cancelQueries({ queryKey: queryKey(login, type) });
 		queryClient.removeQueries({ queryKey: queryKey(login, type) });
-	}, [login, type, queryClient, activeKeyStr]);
+	}, [login, type, queryClient, activeKeyStr, jobIdRef, restartCountRef]);
 
 	const restart = useCallback(() => {
 		setCancelledKey(null);
@@ -202,7 +204,7 @@ export function useAudienceJob(
 		restartCountRef.current = 0;
 		queryClient.removeQueries({ queryKey: queryKey(login, type) });
 		void query.refetch();
-	}, [login, type, queryClient, query]);
+	}, [login, type, queryClient, refetch, jobIdRef, restartCountRef]);
 
 	return { ...state, cancel, restart };
 }
