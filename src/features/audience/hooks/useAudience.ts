@@ -115,15 +115,18 @@ export function useAudience(credentials: Credentials) {
 		return null;
 	}, [followersPhase, followingPhase, followersCount, followingCount]);
 
+	const { cancel: cancelFollowers, restart: restartFollowers } = followersJob;
+	const { cancel: cancelFollowing, restart: restartFollowing } = followingJob;
+
 	const cancel = useCallback(() => {
-		void followersJob.cancel();
-		void followingJob.cancel();
-	}, [followersJob, followingJob]);
+		void cancelFollowers();
+		void cancelFollowing();
+	}, [cancelFollowers, cancelFollowing]);
 
 	const retry = useCallback(() => {
-		followersJob.restart();
-		followingJob.restart();
-	}, [followersJob, followingJob]);
+		restartFollowers();
+		restartFollowing();
+	}, [restartFollowers, restartFollowing]);
 
 	return {
 		status,
