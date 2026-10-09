@@ -10,12 +10,13 @@
 		"format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,scss}\"",
 		"format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,scss}\"",
 		"preview": "vite preview",
-		"type-check": "tsc --noEmit",
+		"type-check": "tsc -b",
 		"prepare": "husky",
 		"changeset": "changeset",
 		"changeset:version": "changeset version",
 		"changeset:publish": "changeset publish",
-		"test": "vitest"
+		"test": "vitest",
+		"test:ci": "vitest run"
 	},
 	"lint-staged": {
 		"*.{ts,tsx}": [
