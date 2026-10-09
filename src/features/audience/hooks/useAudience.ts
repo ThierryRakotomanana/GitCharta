@@ -2,7 +2,7 @@ import { useCallback, useMemo } from "react";
 import { useAudienceJob } from "./useAudienceJob";
 import { useAudienceGeocoding } from "./useAudienceGeocoding";
 import type { Credentials } from "@/shared/api/types";
-import { useUserProfile } from "@/features/user-profile/hooks/useUserProfile";
+import { useUserProfile } from "@/features/user-profile";
 import {
 	buildSteps,
 	overallPercent,

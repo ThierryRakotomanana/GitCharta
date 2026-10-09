@@ -4,7 +4,7 @@ import { GithubIcon } from "@/shared/components/icons/lucide-github";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import { useUserProfile } from "@/features/user-profile";
-import { useSearchLogin } from "@/features/map/hooks/useSearchLogin";
+import { useSearchLogin } from "@/shared/hooks/useSearchLogin";
 import {
 	Sheet,
 	SheetContent,

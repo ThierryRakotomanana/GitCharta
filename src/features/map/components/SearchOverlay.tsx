@@ -3,7 +3,7 @@ import { Dialog } from "radix-ui";
 import { Search, X, Loader2, ArrowRight } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
-import { isValidLogin } from "@/features/audience";
+import { isValidLogin } from "@/shared/lib/login";
 
 interface SearchOverlayProps {
 	activeLogin: string;
